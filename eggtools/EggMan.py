@@ -100,6 +100,12 @@ class EggMan(object):
 
         self.register_eggs(egg_filepaths)
 
+    """
+    Core
+    """
+
+    # region
+
     def register_eggs(self, egg_filepaths: list[Filename | str]) -> None:
         if not egg_filepaths:
             return
@@ -151,6 +157,12 @@ class EggMan(object):
                 ctx.egg_ext_file_refs.add(child)
 
     def merge_eggs(self, destination_egg: EggData, target_eggs: list[EggData] | EggData) -> None:
+    # endregion
+
+    """
+    EggData Management
+    """
+    # region
         """
         Source egg(s) will be removed from egg datas and cannot be searched for anymore.
 
@@ -168,9 +180,11 @@ class EggMan(object):
 
         self.mark_dirty(destination_egg)
 
+    # endregion
     """
     Egg Group Management
     """
+    # region
 
     def strip_all_group_prefix(self, prefixes, recurse):
         for egg_data in self.egg_datas.keys():
@@ -244,10 +258,13 @@ class EggMan(object):
                         traverse_egg(child, ctx)
 
         traverse_egg(egg, self.egg_datas[egg])
+    # endregion
 
     """
     Egg Attribute Management
     """
+
+    # region
 
     def apply_all_attributes(self, egg_attributes: dict[EggAttribute] = None) -> None:
         """
@@ -291,10 +308,13 @@ class EggMan(object):
             target_node.removeObjectType(object_type_name)
             ctx.dirty = True
 
+    # endregion
+
     """
     Texture Reference Methods
     """
 
+    # region
     def rebase_egg_texture(self, tref: str, new_tex_path: str, old_egg_texture: EggTexture) -> EggTexture:
         """
         Generates a new EggTexture with a given tref + texpath while copying the attributes of the old EggTexture.
@@ -512,6 +532,12 @@ class EggMan(object):
             if texture_name in egg_texture.getFilename().getBasename():
                 return egg_texture
 
+    # endregion
+
+    """
+    Texture Access Methods
+    """
+    # region
     def get_tex_info(self, egg_texture: EggTexture) -> str:
         """
         Returns the anisotropic filtering degree that has been specified for this texture,
@@ -522,6 +548,13 @@ class EggMan(object):
         return f"Anisotropic Degree: {egg_texture.anisotropic_degree}\n" \
                f"Alpha File Channel: {egg_texture.alpha_file_channel}"
 
+    # endregion
+
+    """
+    Egg External File Methods
+    """
+
+    # region
     def get_all_egg_filenames(self, prepend_dir=".", as_filename_object: bool = False) -> list[Filename] | list[str]:
         filenames = list()
         for egg_data in self.egg_datas.keys():
@@ -548,13 +581,12 @@ class EggMan(object):
             filename = filename.getBasename()
         return self._egg_name_2_egg_data.get(filename)
 
-    """
-    Egg External File Methods
-    """
+    # endregion
 
     """
     EggMan Helper Methods
     """
+    # region
 
     def mark_dirty(self, egg: EggData | EggContext) -> None:
         if isinstance(egg, EggContext):
@@ -631,9 +663,11 @@ class EggMan(object):
             # TODO, can copy what was done w/ ensuring texture
             pass
 
+    # endregion
     """
     General Maintenance Methods
     """
+    # region
 
     def remove_texture_duplicates(self, egg: EggData = None):
         if not egg:
@@ -719,11 +753,13 @@ class EggMan(object):
                 child.setComment("")
                 self.mark_dirty(egg)
                 # < Comment> { dfsjkofjhksdf }
+    # endregion
 
     """
     Write/Output Methods
     """
 
+    # region
     def write_all_eggs(self, custom_suffix="", dryrun=False):
         """
         Writes egg files through the EggData writeEgg method.
@@ -815,6 +851,8 @@ class EggMan(object):
                 egg_file.write(str(egg_data))
         except Exception as e:
             print(f"Failed to save file ({e})")
+
+    # endregion
 
 
 """
