@@ -7,13 +7,16 @@ from eggtools.components.points.PointData import PointData
 
 
 def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=True) -> Filename:
-    # i need to change filename_suffix to something that continously increments
+    # i need to change filename_suffix to something that continuously increments
     egg_texture = point_data.egg_texture
     tex_node_name = egg_texture.getName()
     tex_filename = egg_texture.getFilename()
 
     image_src = Image.open(Filename.toOsSpecific(tex_filename))
     src_width, src_height = image_src.size
+    # Smallest res allowed is 1 pixel
+    src_width = max(1, src_width)
+    src_height = max(1, src_height)
 
     base_filename = point_data.egg_filename
     box_coords = point_data.get_bbox()
@@ -24,9 +27,20 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
     file_ext = tex_filename.getExtension().lower()
 
     # Cropped out area, we should keep note of this new image size.
+    crop_x1 = max(1, src_width * xMin)
+    crop_y1 = max(1, abs(src_height - (src_height * yMax)))
+    crop_x2 = max(1, src_width * xMax)
+    crop_y2 = max(1, abs(src_height - (src_height * yMin)))
+
+    # nitpicky image edge cases
+    if abs(crop_y2 - crop_y1) < 1:
+        crop_y2 += crop_y1
+    if abs(crop_x2 - crop_x1) < 1:
+        crop_x2 += crop_x1
+
     crop_bounds = (
-        src_width * xMin, abs(src_height - (src_height * yMax)),
-        src_width * xMax, abs(src_height - (src_height * yMin))
+        crop_x1, crop_y1,
+        crop_x2, crop_y2
     )
 
     try:
@@ -45,6 +59,10 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
 
         )
     )
+    crop_width, crop_height = image_cropped.size
+    # Smallest res allowed is 1 pixel
+    crop_width = max(1, crop_width)
+    crop_height = max(1, crop_height)
 
     if file_ext == "png":
         image_kwargs['quality'] = 95  # intended
@@ -53,11 +71,6 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
         image_kwargs['quality'] = 'keep'
 
     if repeat_image:
-        crop_width, crop_height = image_cropped.size
-        # Smallest res allowed is 1 pixel
-        crop_width = max(1, crop_width)
-        crop_height = max(1, crop_height)
-
         if crop_height > src_height or crop_width > src_width:
             # The cropped image's width is larger than the source, we need to repeat it
             image_crop_copy = image_cropped.copy()
