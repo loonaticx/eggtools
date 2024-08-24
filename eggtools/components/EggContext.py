@@ -1,9 +1,6 @@
-from typing import Set, TYPE_CHECKING
-from enum import Enum
-
 from ordered_set import OrderedSet
 from panda3d.core import Filename
-from panda3d.egg import EggTextureCollection, EggTexture, EggNode, EggVertex
+from panda3d.egg import EggTextureCollection, EggTexture, EggNode
 
 from eggtools.components.EggDataContext import EggDataContext
 
@@ -17,7 +14,6 @@ class EggContext:
     """
     Holds iterable attributes for an EggData object
     """
-
 
     @property
     def filename(self) -> Filename:
@@ -43,7 +39,7 @@ class EggContext:
     def __hash__(self):
         return hash(str(self))
 
-    def __init__(self, filename:Filename):
+    def __init__(self, filename: Filename):
         # Don't completely rely on this being the source EggData object. This is meant for synchronization uses.
         self.egg_data_loopback: EggDataContext | None = None
 
@@ -73,7 +69,6 @@ class EggContext:
 
         self.filename = filename
 
-
     def add_collect_texture(self, egg_texture: EggTexture):
         """
         Currently a convenience method to handle managing both the texture set and TextureCollection object.
@@ -82,14 +77,13 @@ class EggContext:
         self.egg_texture_collection.addTexture(egg_texture)
         self.dirty = True
 
-
-    def get_used_node_textures(self, egg_node:EggNode) -> list:
+    def get_used_node_textures(self, egg_node: EggNode) -> list:
         # Gotta make another one of these since the class one includes every texture registered already
         texcollection = EggTextureCollection()
         texcollection.findUsedTextures(egg_node)
         return texcollection.getTextures()
 
-    def points_by_textures(self, egg_node:EggNode):
+    def points_by_textures(self, egg_node: EggNode):
         point_datas = self.point_data[egg_node]
         node_textures = dict()
         for egg_texture in self.get_used_node_textures(egg_node):

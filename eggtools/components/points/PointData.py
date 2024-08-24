@@ -3,6 +3,7 @@ from panda3d.core import Filename
 from panda3d.egg import EggTexture
 from . import PointUtils
 
+
 @dataclass
 class PointData:
     """
@@ -15,9 +16,9 @@ class PointData:
         NodeTex --> EggTexture
     ]
     """
+
     def __hash__(self):
         return hash(id(self))
-
 
     egg_filename: Filename
     egg_vertex_uvs: dict  # aka "point_data"

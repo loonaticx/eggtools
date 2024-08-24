@@ -47,7 +47,6 @@ class EggDataContext(EggData):
         super().read(*args, **kwargs)
         self.egg_filename = super().getEggFilename()
 
-
     def resolveEggFilename(self, egg_filename: Filename, searchpath: DSearchPath) -> bool:
         # [Potentially] modifies the superclass egg_filename property, let's ensure we are still in sync
         resolved = super().resolveEggFilename(egg_filename, searchpath)
@@ -62,8 +61,7 @@ class EggDataContext(EggData):
         # Handles the call back to the superclass
         self.egg_filename = egg_filename
 
-
-    def merge(self, other:EggData):
+    def merge(self, other: EggData):
         # In the future i can do checks to see if this and other context is identical
         # If not (and if both objects have an existing context), then we can run an EggContext method to compare/merge
         if other.context and not self.context:

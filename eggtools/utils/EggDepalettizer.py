@@ -2,7 +2,6 @@ import copy
 import shutil
 import os
 
-
 from panda3d.core import Filename, StringStream, LPoint2d
 from panda3d.egg import EggTexture, EggData, EggPolygon
 
@@ -104,7 +103,7 @@ class Depalettizer:
         # This is weird, I know, but I have not been able to successfully export egg files *with*
         # the new texture headers. My current workaround is to generate a new EggData and append the existing EggData.
         eggstr = '\n'.join([str(elem) for elem in raw_data])
-        data_stream = StringStream(bytes(eggstr, encoding='utf-8'))
+        data_stream = StringStream(bytes(eggstr, encoding = 'utf-8'))
         egg_data_new = EggDataContext()
         egg_data_new.read(data_stream)
 
@@ -125,7 +124,7 @@ class Depalettizer:
         for egg_node in ctx.point_data.keys():
             # This is just a bandaid patch for now
             if ctx.configured:
-                self.depalettize_node(egg_data, egg_node, clamp_uvs=clamp_uvs)
+                self.depalettize_node(egg_data, egg_node, clamp_uvs = clamp_uvs)
 
     def depalettize_all(self, clamp_uvs=True):
         """
