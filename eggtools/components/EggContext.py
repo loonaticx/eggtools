@@ -39,6 +39,10 @@ class EggContext:
     def __hash__(self):
         return hash(str(self))
 
+    def __str__(self):
+        return f"EggContext(Filename: {self.filename}, Configured: {self.configured}, " \
+               f"Dirty: {self.dirty}, Generated: {self.egg_generated})"
+
     def __init__(self, filename: Filename):
         # Don't completely rely on this being the source EggData object. This is meant for synchronization uses.
         self.egg_data_loopback: EggDataContext | None = None
@@ -72,18 +76,31 @@ class EggContext:
     def add_collect_texture(self, egg_texture: EggTexture):
         """
         Currently a convenience method to handle managing both the texture set and TextureCollection object.
+
+        This is for recording all textures used within the EggData itself.
         """
         self.egg_textures.add(egg_texture)
         self.egg_texture_collection.addTexture(egg_texture)
         self.dirty = True
 
     def get_used_node_textures(self, egg_node: EggNode) -> list:
+        """
+        Generates a temporary EggTextureCollection to find and report all EggTextures found within the EggNode.
+
+        Utility method since Egg API doesn't have a nice way of doing this
+        """
         # Gotta make another one of these since the class one includes every texture registered already
         texcollection = EggTextureCollection()
         texcollection.findUsedTextures(egg_node)
         return texcollection.getTextures()
 
-    def points_by_textures(self, egg_node: EggNode):
+    def points_by_textures(self, egg_node: EggNode) -> dict[ "EggTexture | PointData"]:
+        """
+        :returns: a list of PointDatas (EggVertexes and UV coordinates) for each EggTexture on the EggNode.
+
+        Struct:
+        { EggTexture: [ PointData, ... ] }
+        """
         point_datas = self.point_data[egg_node]
         node_textures = dict()
         for egg_texture in self.get_used_node_textures(egg_node):

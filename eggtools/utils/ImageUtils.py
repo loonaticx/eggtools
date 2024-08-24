@@ -1,6 +1,5 @@
 from PIL import Image
 from panda3d.core import Filename
-from panda3d.egg import EggTexture
 import os
 
 from eggtools.components.points.PointData import PointData
@@ -46,6 +45,7 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
     try:
         # Sometimes we end up catching stragglers that aren't palettized, which make a fuss
         # Coordinate 'lower' is less than 'upper'
+        # Note: This may be a cause of bad image outputs.
         image_cropped = image_src.crop(crop_bounds)
     except:
         return
@@ -72,7 +72,7 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
 
     if repeat_image:
         if crop_height > src_height or crop_width > src_width:
-            # The cropped image's width is larger than the source, we need to repeat it
+            # The cropped image's width/height is larger than the source, we need to repeat it
             image_crop_copy = image_cropped.copy()
             pixel_height = 0
             pixel_width = 0

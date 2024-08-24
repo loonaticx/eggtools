@@ -9,9 +9,15 @@ if TYPE_CHECKING:
 
 class EggDataContext(EggData):
     """
-    Intended to try and synchronise any significant modifications done to the EggData to match a respective EggContext
+    When working with EggMan, EggDataContext should be used over EggData.
+    It is a wrapper around EggData with some additional features to keep in sync with the corresponding EggContext.
     """
     _egg_filename = Filename()
+
+    """
+    It's important that the filename for the superclass, this class, and the corresponding EggContext class
+    to be synchronized with each other.
+    """
 
     @property
     def egg_filename(self) -> Filename:
@@ -29,9 +35,11 @@ class EggDataContext(EggData):
         if self.context and (self.context.filename is not filename):
             self.context.filename = filename
 
-    # accessibility
+    """
+    Shortcut properties for conventional reasons
+    """
     @property
-    def filename(self):
+    def filename(self) -> Filename:
         return self.egg_filename
 
     @filename.setter
@@ -54,14 +62,20 @@ class EggDataContext(EggData):
             self.egg_filename = super().getEggFilename()
         return resolved
 
-    def getEggFilename(self):
+    def getEggFilename(self) -> Filename:
         return self.egg_filename
 
     def setEggFilename(self, egg_filename: Filename) -> bool:
         # Handles the call back to the superclass
         self.egg_filename = egg_filename
 
-    def merge(self, other: EggData):
+    def merge(self, other) -> None:
+        """
+        :param EggDataContext other: Should be EggDataContext and NOT EggData
+
+        Appends the other egg structure to the end of this one.
+        The other egg structure is invalidated.
+        """
         # In the future i can do checks to see if this and other context is identical
         # If not (and if both objects have an existing context), then we can run an EggContext method to compare/merge
         if other.context and not self.context:

@@ -7,23 +7,23 @@ from . import PointUtils
 @dataclass
 class PointData:
     """
-    Generated from EggPolygon instances.
-    """
-    """
-    [
-        [NodeID, NodeTex]
-        NodeID --> [ EggVertex: { u, v } ]
-        NodeTex --> EggTexture
-    ]
+    Used with EggPolygon instances to keep a reference of the origin egg file, the corresponding TRef used
+    on the polygon, and the collection of EggVertices that make up the polygon.
+
+    Note: Not intended to be used for polygons that have more than one TRef entry, such as used in multitexturing.
     """
 
     def __hash__(self):
         return hash(id(self))
 
     egg_filename: Filename
-    egg_vertex_uvs: dict  # aka "point_data"
+
+    # The *actual* point data:
+    egg_vertex_uvs: dict  # { EggVertex: [u, v] }
+
     egg_texture: EggTexture
 
+    # Conventional shortcut method
     def get_bounding_volume(self):
         return self.get_bbox()
 
@@ -40,3 +40,7 @@ class PointData:
             allX.append(u)
             allY.append(v)
         return PointUtils.bounding_box([allX, allY])
+
+    def print_uvs(self, multiplier=1):
+        for u, v in self.egg_vertex_uvs.values():
+            print(f"u: {u * multiplier} v: {v * multiplier}")

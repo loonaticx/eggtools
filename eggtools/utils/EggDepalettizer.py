@@ -29,6 +29,9 @@ class Depalettizer:
         min_y -= self.padding_v
         max_y += self.padding_v
 
+        # Reference: https://stackoverflow.com/a/2450158
+        # https://www.albany.edu/faculty/jmower/geog/gog530Python/src/NormalizingCoordinatesManual.html
+
         for vertex, uv_coordinates in point_data.egg_vertex_uvs.items():
             xVal, yVal = uv_coordinates
             newX = xVal - ((max_x + min_x) / 2)
@@ -39,7 +42,7 @@ class Depalettizer:
             newY += 0.5
             vertex.set_uv(LPoint2d(newX, newY))
 
-    def depalettize_node(self, egg_data, egg_node, clamp_uvs=True):
+    def depalettize_node(self, egg_data: EggDataContext, egg_node: EggNode, clamp_uvs=True):
         """
         Depalettizes an EggNode completely.
 
