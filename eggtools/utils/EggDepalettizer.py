@@ -1,9 +1,5 @@
-import copy
-import shutil
-import os
-
 from panda3d.core import Filename, StringStream, LPoint2d
-from panda3d.egg import EggTexture, EggData, EggPolygon
+from panda3d.egg import EggTexture, EggData, EggPolygon, EggNode
 
 from eggtools.EggMan import EggMan
 from eggtools.components.EggDataContext import EggDataContext
@@ -18,6 +14,10 @@ class Depalettizer:
         # Don't let these values be zero!
         self.padding_u = max(padding_u, 0.001)
         self.padding_v = max(padding_v, 0.001)
+
+        # Problem: You cannot just add new textures to a texture collection or to polygons. You think it would be easy?
+        # No, we need to effectively 'inject' these new texture headers into our working EggData.
+        self.raw_data = []
 
     def normalize_uvs(self, point_data: PointData):
         bbox = point_data.get_bbox()
@@ -52,9 +52,6 @@ class Depalettizer:
         """
         ctx = self.eggman.egg_datas[egg_data]
 
-        # Problem: You cannot just add new textures to a texture collection or to polygons. You think it would be easy?
-        # No, we need to effectively 'inject' these new texture headers into our working EggData.
-        raw_data = []
         i = 0
 
         # Nodes will most likely contain numerous of textures. We can group related polygons by mutual textures.
@@ -75,26 +72,34 @@ class Depalettizer:
             # THIS is all of our aggregated point data. Don't mind the similar variable names here.
             point_data = PointData(point_filename, point_vertexes, point_texture)
 
+            # Generates and writes out the new texture images.
+            # If we can't create a cropped image let's bounce before something explodes for now
+            cropped_filename = ImageUtils.crop_image_to_box(point_data, f"{egg_node.getName()}_{i}")
+
+            if not cropped_filename:
+                continue
+
             # Cross my fingers that this works babyy!!
             self.normalize_uvs(point_data)
 
-            # Generates and writes out the new texture images.
-            cropped_filename = ImageUtils.crop_image_to_box(point_data, str(i))
             # Generate a new EggTexture, only differences here is just the filename/paths.
             egg_texture_new = self.eggman.rebase_egg_texture(
                 cropped_filename.getBasenameWoExtension(), cropped_filename, point_data.egg_texture
             )
 
-            # Adding the new texture into our records.
-            ctx.add_collect_texture(egg_texture_new)
-            raw_data.append(egg_texture_new)
+            recorded_texture = ctx.egg_texture_collection.findFilename(egg_texture_new.getFilename())
 
-            # No, don't do this. Just adds redundant TRefs and causes issues.
+            if not recorded_texture:
+                # Adding the new texture into our records.
+                ctx.add_collect_texture(egg_texture_new)
+                self.raw_data.append(egg_texture_new)
+                recorded_texture = egg_texture_new
+
             for child in egg_node.getChildren():
                 if isinstance(child, EggPolygon):
-                    if egg_texture_new not in ctx.get_used_node_textures(child):
+                    if recorded_texture not in ctx.get_used_node_textures(child):
                         child.clearTexture()
-                        child.addTexture(egg_texture_new)
+                        child.addTexture(recorded_texture)
 
             # Strongly recommended to keep this on by default since the margining/texture filtering
             # may get a bit distracting
@@ -103,9 +108,13 @@ class Depalettizer:
                 point_data.egg_texture.setWrapV(EggTexture.WM_clamp)
             i += 1
 
+    def append_new_eggdata(self, egg_data):
+        # This will lead to redundant texture entries, but it's ok for now, because they get cleaned up
+        # later down the line anyway
+
         # This is weird, I know, but I have not been able to successfully export egg files *with*
         # the new texture headers. My current workaround is to generate a new EggData and append the existing EggData.
-        eggstr = '\n'.join([str(elem) for elem in raw_data])
+        eggstr = '\n'.join([str(elem) for elem in self.raw_data])
         data_stream = StringStream(bytes(eggstr, encoding = 'utf-8'))
         egg_data_new = EggDataContext()
         egg_data_new.read(data_stream)
@@ -123,11 +132,13 @@ class Depalettizer:
 
         :param bool clamp_uvs: Sets the UV wrap mode to clamp. Strongly recommended due to padding artifacts.
         """
+        self.raw_data = []
         ctx = self.eggman.egg_datas[egg_data]
         for egg_node in ctx.point_data.keys():
-            # This is just a bandaid patch for now
             if ctx.configured:
                 self.depalettize_node(egg_data, egg_node, clamp_uvs = clamp_uvs)
+                # ctx.merge_replace(new_ctx)
+        self.append_new_eggdata(egg_data)
 
     def depalettize_all(self, clamp_uvs=True):
         """
