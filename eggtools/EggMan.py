@@ -29,6 +29,8 @@ from eggtools.attributes.EggAttribute import EggAttribute
 from eggtools.attributes.EggUVNameAttribute import EggUVNameAttribute
 from eggtools.config.EggVariableConfig import GAMEASSETS_MAPS_PATH, GAMEASSETS_DIR
 from eggtools.utils.EggNameResolver import EggNameResolver
+from eggtools.components.EggContext import EggContext
+from eggtools.components.EggDataContext import EggDataContext
 
 BASE_PATH = GAMEASSETS_MAPS_PATH
 
@@ -37,30 +39,6 @@ class EggGroupRenameType(str, Enum):
     RenamePrefixes = "rename_prefix"
     RenameSuffixes = "rename_suffix"
     ReplaceAll = "replace_all"
-
-
-@dataclass
-class EggContext:
-    """
-    Holds iterable attributes for an EggData object
-    """
-
-    # Holds the filename of the egg
-    filename: Filename
-
-    # If egg has been altered in memory, it is considered dirty and subject to overwrite what's on the disk.
-    dirty: bool = field(default_factory=lambda: False)
-
-    egg_textures: Set = field(default_factory=lambda: set())
-    egg_texture_collection: EggTextureCollection = field(default_factory=lambda: EggTextureCollection())
-    egg_materials: Set = field(default_factory=lambda: set())
-    egg_attributes: Set = field(default_factory=lambda: set())
-    egg_timestamp_old: int = field(default_factory=lambda: False)
-    egg_save_timestamp: bool = field(default_factory=lambda: False)
-    egg_ext_file_refs: Set = field(default_factory=lambda: set())
-
-    def __hash__(self):
-        return hash(str(self))
 
 
 class EggMan(object):
@@ -114,7 +92,7 @@ class EggMan(object):
             if fp.getExtension() not in ("egg", "pz"):  # pz: pzip
                 print(f"{fp.getBasenameWoExtension()} does not have egg extension, not registering {fp.getFullpath()}")
                 continue
-            egg_data = EggData()
+            egg_data = EggDataContext()
             egg_data.read(fp)
             self.egg_datas[egg_data] = EggContext(fp)
             ctx = self.egg_datas[egg_data]
@@ -126,7 +104,7 @@ class EggMan(object):
         """
         Register an egg texture with the given EggContext. This is used when traversing down the egg.
         """
-        ctx.egg_textures.add(target_node)
+        ctx.add_collect_texture(target_node)
         uvName = target_node.getUvName()
         if uvName:
             uvAttr = EggUVNameAttribute(uvName)
@@ -144,13 +122,17 @@ class EggMan(object):
             if isinstance(child, EggGroup):
                 # print(f"ObjectTypes for {child.getName()} - {child.getObjectTypes()}")
                 self._replace_object_types(ctx, child)
+                ctx.egg_groups.add(child)
                 self._traverse_egg(child, ctx)
+
             # <Material> { ... }
             if isinstance(child, EggMaterial):
                 ctx.egg_materials.add(child)
+
             # <Texture> { blah.png }
             if isinstance(child, EggTexture):
                 self._register_egg_texture(ctx, child)
+
             # <File> { filename.egg }
             if isinstance(child, EggExternalReference):
                 ctx.egg_ext_file_refs.add(child)
