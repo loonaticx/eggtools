@@ -81,8 +81,8 @@ class EggMan(object):
             if not self.egg_datas.get(egg_base):
                 raise EggAccessViolation(egg_base)
 
-            func(self, egg_base, *args)
 
+            return func(self, egg_base, *args)
         return verify
 
     def __init__(self, egg_filepaths: list, search_paths: list[str] = None,
