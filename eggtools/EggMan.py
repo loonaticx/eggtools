@@ -921,7 +921,7 @@ class EggMan(object):
         else:
             logging.debug(f"{egg.egg_filename} was not dirty, not writing anything")
 
-    def write_all_eggs_manually(self, custom_suffix=""):
+    def write_all_eggs_manually(self, custom_suffix="", dryrun=False):
         """
         Exports all of the Egg files in EggMan manually. This will guarantee that something does get exported.
         By default, floating point values will be truncated to .4f
@@ -929,7 +929,7 @@ class EggMan(object):
         # I don't think this is going to cause any visual dislocation issues. The precision comes from
         # a floating point error nonetheless. We are also talking about a 0.0000xxxxxx difference.
         for egg_data in self.egg_datas.keys():
-            self.write_egg_manually(egg_data, custom_suffix=custom_suffix)
+            self.write_egg_manually(egg_data, custom_suffix=custom_suffix, dryrun=dryrun)
 
     def write_egg_manually(self, egg, filename="", custom_suffix="", ):
         """
