@@ -104,7 +104,6 @@ class Depalettizer:
         # This is weird, I know, but I have not been able to successfully export egg files *with*
         # the new texture headers. My current workaround is to generate a new EggData and append the existing EggData.
         eggstr = '\n'.join([str(elem) for elem in raw_data])
-        print(f"STR \n{eggstr}")
         data_stream = StringStream(bytes(eggstr, encoding='utf-8'))
         egg_data_new = EggDataContext()
         egg_data_new.read(data_stream)
@@ -122,7 +121,6 @@ class Depalettizer:
 
         :param bool clamp_uvs: Sets the UV wrap mode to clamp. Strongly recommended due to padding artifacts.
         """
-        # print(f"egg_data {egg_data}")
         ctx = self.eggman.egg_datas[egg_data]
         for egg_node in ctx.point_data.keys():
             # This is just a bandaid patch for now
