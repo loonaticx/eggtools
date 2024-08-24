@@ -15,9 +15,9 @@ import logging
 from enum import Enum
 from typing import Set
 
+from ordered_set import OrderedSet
 from panda3d.core import Filename
 from panda3d.egg import *
-from dataclasses import dataclass, field
 import os, sys
 from pathlib import Path
 
@@ -27,6 +27,7 @@ from eggtools.AttributeDefs import DefinedAttributes, ObjectTypeDefs
 from eggtools.attributes.EggAlphaAttribute import EggAlphaAttribute
 from eggtools.attributes.EggAttribute import EggAttribute
 from eggtools.attributes.EggUVNameAttribute import EggUVNameAttribute
+from eggtools.components.points.PointData import PointData
 from eggtools.config.EggVariableConfig import GAMEASSETS_MAPS_PATH, GAMEASSETS_DIR
 from eggtools.utils.EggNameResolver import EggNameResolver
 from eggtools.components.EggContext import EggContext
@@ -52,6 +53,9 @@ class EggMan(object):
         return out
 
     def verify_integrity(func):
+        """
+        Watcher to ensure that no invalid egg inputs are given
+        """
         def verify(self, egg_base: EggData, *args):
             if not isinstance(egg_base, EggData):
                 raise EggImproperArgType(egg_base, EggData)
@@ -84,6 +88,9 @@ class EggMan(object):
     # region
 
     def register_eggs(self, egg_filepaths: list[Filename | str]) -> None:
+        """
+        Register Egg entries with EggMan through filepaths.
+        """
         if not egg_filepaths:
             return
         for fp in egg_filepaths:
@@ -94,11 +101,36 @@ class EggMan(object):
                 continue
             egg_data = EggDataContext()
             egg_data.read(fp)
-            self.egg_datas[egg_data] = EggContext(fp)
+            self.register_egg_data([egg_data])
+
+    def register_egg_data(self, egg_datas: list[EggData | EggDataContext]) -> None:
+        """
+        Registers supplemented egg data into EggMan.
+        """
+        if not isinstance(egg_datas, list):
+            egg_datas = [egg_datas]
+
+        for egg_data in egg_datas:
+            if self.egg_datas.get(egg_data):
+                raise EggAccessViolation(egg_data, "Attempted to register the same EggData more than once!")
+            egg_filepath = egg_data.getEggFilename()
+
+            self.egg_datas[egg_data] = EggContext(egg_filepath)
             ctx = self.egg_datas[egg_data]
+
+            if isinstance(egg_data, EggDataContext):
+                egg_data.context = ctx
+
+            # Populates this EggTextureCollection. Note that you will need to ensure that the texture collection
+            # is recalled if any textures are added/deleted.
             ctx.egg_texture_collection.findUsedTextures(egg_data)
             self._traverse_egg(egg_data, ctx)
-            self._egg_name_2_egg_data[fp.getBasename()] = egg_data
+            self._egg_name_2_egg_data[egg_filepath.getBasename()] = egg_data
+            if not egg_data.getChildren():
+                logging.warning("Registering empty EggData!")
+            if not ctx.filename:
+                # Todo: better handling for egg files with no filename
+                logging.warning("EggData entry registered with no filename (use setEggFilename!)")
 
     def _register_egg_texture(self, ctx: EggContext, target_node: EggTexture) -> None:
         """
@@ -137,13 +169,41 @@ class EggMan(object):
             if isinstance(child, EggExternalReference):
                 ctx.egg_ext_file_refs.add(child)
 
-    def merge_eggs(self, destination_egg: EggData, target_eggs: list[EggData] | EggData) -> None:
+            if isinstance(child, EggPolygon):
+                # { EggGroupName { { Polygon_TREFNAME : { "vertexID" : [ U, V ] } } }
+                # For now can we only use one tref for Polygon entries, even though having more is possible
+                polyTexture = child.getTexture()
+                if not polyTexture:
+                    continue
+                parent_node = child.getParent()
+
+                vertex_uvs = {}
+                # UV name attributes are handled separately since they are tangible
+                for egg_vertex in child.getVertices():
+                    if egg_vertex.hasUv():
+                        u, v = egg_vertex.getUv()
+                        vertex_uvs[egg_vertex] = [u, v]
+
+                if not ctx.point_data.get(parent_node):
+                    ctx.point_data[parent_node] = OrderedSet()
+
+                # parent node should already have an entry.
+                ctx.point_data[parent_node].add(
+                    PointData(
+                        egg_filename = ctx.filename,
+                        egg_vertex_uvs = vertex_uvs,
+                        egg_texture = polyTexture
+                    )
+                )
+
+
     # endregion
 
     """
     EggData Management
     """
     # region
+    def merge_eggs(self, destination_egg: EggDataContext, target_eggs: list[EggDataContext] | EggDataContext) -> None:
         """
         Source egg(s) will be removed from egg datas and cannot be searched for anymore.
 
@@ -161,7 +221,59 @@ class EggMan(object):
 
         self.mark_dirty(destination_egg)
 
+
+    @verify_integrity
+    def replace_eggdata(self, old_eggdata:EggDataContext, new_eggdata:EggDataContext):
+        """
+        Replaces a registered EggData entry with any unregistered EggData entry.
+        Note: EggContext may be stale from this!
+
+        :param new_eggdata: EggData that is currently *not* registered with EggMan yet.
+        """
+        """
+        # Use case:
+        newEggData = EggData()
+        newEggData.read(...)
+        # Example: Adding new data entries to the top of the egg file, rather than the bottom
+        newEggData.merge(oldEggData)
+        eggman.replace_eggdata(oldEggData, newEggData)
+        """
+        if old_eggdata is new_eggdata:
+            # This would already raise an exception, but let's give a bit more of a clear reason.
+            raise EggAccessViolation(new_eggdata, "Cannot replace EggData with itself!")
+
+        ctx_old = self.egg_datas[old_eggdata]
+
+        # Generate new EggData entry
+        self.register_egg_data(new_eggdata)
+
+        ctx_new = self.egg_datas[new_eggdata]
+        ctx_new.merge_replace(ctx_old)
+        ctx_new.egg_texture_collection.removeUnusedTextures(new_eggdata)
+
+        # Swap locations of the old and new entry to preserve the index order.
+        egg_indexes = list(self.egg_datas)
+        old_eggdata_index = egg_indexes.index(old_eggdata)
+        new_eggdata_index = egg_indexes.index(new_eggdata)
+
+        eggdata = list(self.egg_datas.items())
+
+        # Move old eggdata to the back of the dict so that it doesn't affect anyone else
+        eggdata[old_eggdata_index], eggdata[new_eggdata_index] = eggdata[new_eggdata_index], eggdata[old_eggdata_index]
+
+        # Convert back to dict
+        self.egg_datas = dict(eggdata)
+
+
+        # Remove old egg from dict
+        del self._egg_name_2_egg_data[ctx_old.filename.getBasename()]
+        del self.egg_datas[old_eggdata]
+        ctx_old.destroy()
+        del ctx_old
+
+
     # endregion
+
     """
     Egg Group Management
     """
@@ -513,6 +625,12 @@ class EggMan(object):
             if texture_name in egg_texture.getFilename().getBasename():
                 return egg_texture
 
+    def sort_trefs(self, egg:EggData=None, sortby:str=""):
+        # TODO, make sortby enums, just have like
+        # { TCSort.TRefs: sortByTref }
+        pass
+
+
     # endregion
 
     """
@@ -528,6 +646,33 @@ class EggMan(object):
         """
         return f"Anisotropic Degree: {egg_texture.anisotropic_degree}\n" \
                f"Alpha File Channel: {egg_texture.alpha_file_channel}"
+
+    # endregion
+
+    """
+    Egg Vertex Management
+    """
+    # region
+
+    @verify_integrity
+    def get_point_data(self, egg_data, egg_node) -> OrderedSet[PointData] | None:
+        """
+        [
+            [NodeID, NodeTex]
+            NodeID --> [ EggVertex: { u, v } ]
+            NodeTex --> EggTexture
+        ]
+        """
+        ctx: EggContext = self.egg_datas[egg_data]
+        point_data = ctx.point_data.get(egg_node)
+        if point_data:
+            return point_data
+        for point_node in ctx.point_data.keys():
+            if egg_node.getName() == point_node.getName():
+                point_data = ctx.point_data[point_node]
+                return point_data
+        return None
+
 
     # endregion
 
