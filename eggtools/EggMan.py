@@ -63,7 +63,7 @@ class EggMan(object):
         return verify
 
     def __init__(self, egg_filepaths: list, search_paths: list[str] = None,
-                 loglevel: logging = logging.CRITICAL) -> None:
+                 loglevel: logging = logging.WARNING) -> None:
         logging.basicConfig(level=loglevel)
         if not search_paths:
             search_paths = [BASE_PATH]
