@@ -14,6 +14,10 @@ class EggSequenceAttribute(EggSwitchAttribute, EggFPSAttribute):
             EggSwitchAttribute().__init__(enable),
             EggFPSAttribute().__init__(fps_rate)
         ]
+        # Friendly data
+        self.entry_type = "Sequence"
+        self.name = ""
+        self.contents = f"fps = {fps_rate}"
 
     def _modify_polygon(self, egg_polygon, tref):
         for seqAttr in self.seq:
