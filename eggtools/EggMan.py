@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 import os, sys
 from pathlib import Path
 
-from eggtools.EggExceptions import EggAccessViolation, EggImproperArgType
+from eggtools.components.EggExceptions import EggAccessViolation, EggImproperArgType
 from eggtools.EggManConfig import DecalConfig, DualConfig, NodeNameConfig
 from eggtools.AttributeDefs import DefinedAttributes, ObjectTypeDefs
 from eggtools.attributes.EggAlphaAttribute import EggAlphaAttribute
@@ -79,8 +79,7 @@ class EggMan(object):
                 raise EggImproperArgType(egg_base, EggData)
 
             if not self.egg_datas.get(egg_base):
-                raise EggAccessViolation(egg_base)
-
+                raise EggAccessViolation(egg_base, "Attempted to utilize non-existent EggData entry!")
 
             return func(self, egg_base, *args)
         return verify
