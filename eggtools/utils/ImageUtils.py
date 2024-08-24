@@ -20,17 +20,17 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
 
     base_filename = point_data.egg_filename
     box_coords = point_data.get_bbox()
-    xMin, xMax = box_coords[0]
-    yMin, yMax = box_coords[1]
+    xMin, yMin = box_coords[0]
+    xMax, yMax = box_coords[1]
 
     image_kwargs = {}
     file_ext = tex_filename.getExtension().lower()
 
     # Cropped out area, we should keep note of this new image size.
-    crop_x1 = max(1, src_width * xMin)
-    crop_y1 = max(1, abs(src_height - (src_height * yMax)))
-    crop_x2 = max(1, src_width * xMax)
-    crop_y2 = max(1, abs(src_height - (src_height * yMin)))
+    crop_x1 = max(1, src_width * xMin)  # Right
+    crop_y1 = max(1, abs(src_height - (src_height * yMax)))  # Top
+    crop_x2 = max(1, src_width * xMax)  # Left
+    crop_y2 = max(1, abs(src_height - (src_height * yMin)))  # Bottom
 
     # nitpicky image edge cases
     if abs(crop_y2 - crop_y1) < 1:

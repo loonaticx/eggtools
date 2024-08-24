@@ -21,8 +21,8 @@ class Depalettizer:
 
     def normalize_uvs(self, point_data: PointData):
         bbox = point_data.get_bbox()
-        min_x, max_x = bbox[0]
-        min_y, max_y = bbox[1]
+        min_x, min_y = bbox[0]
+        max_x, max_y = bbox[1]
 
         min_x += self.padding_u
         max_x -= self.padding_u

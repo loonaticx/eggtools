@@ -1,9 +1,11 @@
 def bounding_box(points):
-    """returns a list containing the bottom left and the top right
-    points in the sequence
-    Here, we use min and max four times over the collection of points
+    """
+    :returns: a list containing the bottom left and the top right points in the sequence
+
+    ( [xMin, yMin], [xMax, yMax] )
     """
     x, y = points
+    # Here, we use min and max four times over the collection of points
     bot_left_x = min(point for point in x)
     bot_left_y = min(point for point in y)
     top_right_x = max(point for point in x)

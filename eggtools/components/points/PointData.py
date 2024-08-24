@@ -29,8 +29,9 @@ class PointData:
 
     def get_bbox(self):
         """
-        xMin, xMax = bbox[0]
-        yMin, yMax = bbox[1]
+        Reports the bounding box of the egg_vertex_uvs entries.
+
+        :returns: ( [xMin, yMin], [xMax, yMax] )
         """
         allX = []
         allY = []
