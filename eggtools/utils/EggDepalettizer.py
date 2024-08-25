@@ -24,8 +24,8 @@ class Depalettizer:
         min_x, min_y = bbox[0]
         max_x, max_y = bbox[1]
 
-        min_x += self.padding_u
-        max_x -= self.padding_u
+        min_x -= self.padding_u
+        max_x += self.padding_u
         min_y -= self.padding_v
         max_y += self.padding_v
 
