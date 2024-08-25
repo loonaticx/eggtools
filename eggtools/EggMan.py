@@ -757,7 +757,7 @@ class EggMan(object):
                 tex_file = self.NameResolver.try_different_names(tex_file)
             for search_path in self.NameResolver.search_paths:
                 if try_absolute:
-                    possible_path = self.NameResolver.try_searching(tex_file)
+                    possible_path = self.NameResolver.try_searching_paths(tex_file)
                     if possible_path:
                         logging.debug(f"Rebasing to absolute texture path for {possible_path} ({search_path}")
                         self.mark_dirty(ctx)
