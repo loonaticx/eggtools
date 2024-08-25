@@ -2,10 +2,14 @@ from PIL import Image
 from panda3d.core import Filename
 import os
 
+from eggtools.components.images.ImageMarginer import ImageMarginer
 from eggtools.components.points.PointData import PointData
+from eggtools.utils.MarginCalculator import MarginCalculator
 
 
-def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=True) -> Filename:
+def crop_image_to_box(
+        point_data: PointData, filename_suffix="", repeat_image=True,
+        margin_u=0., margin_v=0.) -> Filename:
     # i need to change filename_suffix to something that continuously increments
     egg_texture = point_data.egg_texture
     tex_node_name = egg_texture.getName()
@@ -70,6 +74,7 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
         # imageKwargs['subsampling'] = 0
         image_kwargs['quality'] = 'keep'
 
+    # TODO: migrate this to ImageMarginer
     if repeat_image:
         if crop_height > src_height or crop_width > src_width:
             # The cropped image's width/height is larger than the source, we need to repeat it
@@ -87,7 +92,15 @@ def crop_image_to_box(point_data: PointData, filename_suffix="", repeat_image=Tr
 
             image_cropped = image_crop_copy
 
-    image_cropped.save(
+    # Gonna interrupt here. Now that we have cropped the image, lets add padding for now
+    # It will extend the image a bit
+    margin_coords, _ = MarginCalculator.get_margined_by_ratio(crop_width, crop_height, margin_u, margin_v)
+    margin_x, margin_y = margin_coords
+
+    marginer = ImageMarginer(image_cropped)
+    expanded_image = marginer.create_margined_image(margin_x, margin_y)
+
+    expanded_image.save(
         Filename.toOsSpecific(image_cropped_filename),
         **image_kwargs
     )

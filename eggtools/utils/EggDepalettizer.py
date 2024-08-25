@@ -74,8 +74,13 @@ class Depalettizer:
 
             # Generates and writes out the new texture images.
             # If we can't create a cropped image let's bounce before something explodes for now
-            cropped_filename = ImageUtils.crop_image_to_box(point_data, f"{egg_node.getName()}_{i}")
-
+            cropped_filename = ImageUtils.crop_image_to_box(
+                point_data,
+                f"{egg_node.getName()}_{i}",
+                margin_u = self.padding_u,
+                margin_v = self.padding_v,
+                repeat_image = False
+            )
             if not cropped_filename:
                 continue
 
