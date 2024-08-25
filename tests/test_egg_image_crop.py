@@ -5,7 +5,7 @@ from panda3d.core import *
 from eggtools.EggMan import EggMan
 from eggtools.components.EggContext import EggContext
 
-from eggtools.utils import ImageUtils
+from eggtools.components.images import ImageUtils
 
 if not os.path.isfile('tests/test_tiles.egg'):
     test_egg = Filename.fromOsSpecific('test_tiles.egg')

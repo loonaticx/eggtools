@@ -5,7 +5,7 @@ from eggtools.EggMan import EggMan
 from eggtools.components.EggDataContext import EggDataContext
 from eggtools.components.points.PointData import PointData, PointHelper
 
-from eggtools.utils import ImageUtils
+from eggtools.components.images import ImageUtils
 
 
 class Depalettizer:
