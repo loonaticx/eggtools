@@ -9,11 +9,17 @@ from eggtools.utils import ImageUtils
 
 
 class Depalettizer:
-    def __init__(self, file_list: list, padding_u=0.001, padding_v=0.001):
-        self.eggman = EggMan(file_list)
-        # Don't let these values be zero!
-        self.padding_u = max(padding_u, 0.001)
-        self.padding_v = max(padding_v, 0.001)
+    def __init__(self, file_list: list, padding_u=0.001, padding_v=0.001, eggman: EggMan = None):
+        """
+        By default, padding is equivalent to 1% of the texture size [0-1]
+        (meaning that the uv would effectively be 99% of its normalized scale)
+        """
+        self.eggman = eggman
+        if not self.eggman:
+            self.eggman = EggMan(file_list)
+        # Padding must be a non-zero value.
+        self.padding_u = max(padding_u, 0.00000000001)
+        self.padding_v = max(padding_v, 0.00000000001)
 
         # Problem: You cannot just add new textures to a texture collection or to polygons. You think it would be easy?
         # No, we need to effectively 'inject' these new texture headers into our working EggData.
