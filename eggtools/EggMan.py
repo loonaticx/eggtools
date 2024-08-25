@@ -720,7 +720,7 @@ class EggMan(object):
         else:
             self.egg_datas[egg].dirty = True
 
-    def resolve_egg_textures(self, egg: EggData, want_auto_resolve: bool = True, try_names: bool = True) -> None:
+    def resolve_egg_textures(self, egg: EggData, want_auto_resolve: bool = True, try_names: bool = True, try_absolute=False) -> None:
         def auto_resolve(tex_path: str):
             """
             :return: new filename for setFilename
@@ -729,15 +729,23 @@ class EggMan(object):
             if try_names:
                 tex_file = self.NameResolver.try_different_names(tex_file)
             for search_path in self.NameResolver.search_paths:
-                new_tex_file = Filename.fromOsSpecific(os.path.join(search_path, tex_file))
-                if not os.path.isfile(new_tex_file):
-                    continue
-                logging.info(f"Rebasing texture path for {tex_file} to {search_path}")
-                tex_path = os.path.relpath(
-                    new_tex_file, os.path.dirname(os.path.abspath(ctx.filename))
-                ).replace(os.sep, '/')
-                logging.debug(f"new tex path--> {tex_path} ({search_path}")
-                self.mark_dirty(ctx)
+                if try_absolute:
+                    possible_path = self.NameResolver.try_searching(tex_file)
+                    if possible_path:
+                        logging.debug(f"Rebasing to absolute texture path for {possible_path} ({search_path}")
+                        self.mark_dirty(ctx)
+                        return possible_path
+                else:
+                    new_tex_file = Filename.fromOsSpecific(os.path.join(search_path, tex_file))
+                    if not os.path.isfile(new_tex_file):
+                        continue
+                    logging.info(f"Rebasing texture path for {tex_file} to {search_path}")
+                    tex_path = os.path.relpath(
+                        new_tex_file, os.path.dirname(os.path.abspath(ctx.filename))
+                    ).replace(os.sep, '/')
+                    logging.debug(f"new tex path--> {tex_path} ({search_path}")
+                    self.mark_dirty(ctx)
+                    return tex_path
             return tex_path
 
         ctx = self.egg_datas[egg]
@@ -759,7 +767,6 @@ class EggMan(object):
             # we still don't want to use absolute filepaths.
 
             if not (os.path.isfile(fixed_path) and not os.path.isfile(os.path.abspath(egg_texture.getFullpath()))):
-                logging.warning(f"Warning, couldn't find texture {egg_texture.getFilename()}")
                 # if relative (good), this should give is an invalid path.
                 logging.debug(f"(path){os.path.abspath(egg_texture.getFullpath())}")
                 if want_auto_resolve:
@@ -769,6 +776,11 @@ class EggMan(object):
                     egg_texture.assign(
                         self.rebase_egg_texture(tref, auto_resolve(egg_texture.getFullpath()), egg_texture)
                     )
+                    if not os.path.isfile(egg_texture.getFilename()):
+                        logging.warning(f"Still couldn't find a texture after trying to auto resolve {egg_texture.getFilename()}")
+                else:
+                    logging.warning(f"Warning, couldn't find texture {egg_texture.getFilename()}")
+
             elif os.path.isfile(fixed_path) and not ensure_test:
                 print(f"ensure_test returned false")
 
@@ -815,16 +827,16 @@ class EggMan(object):
         egg.setEggTimestamp(1)
         self.mark_dirty(egg)
 
-    def fix_broken_texpaths(self, egg: EggData = None) -> None:
+    def fix_broken_texpaths(self, egg: EggData = None, try_names:bool=True, try_absolute:bool=False) -> None:
         """
         Fixes broken texture paths but does not change the name of the TRef.
         """
         if not egg:
             # ok we'll just fix all of the ones we've registered then
             for egg_data in self.egg_datas.keys():
-                self.resolve_egg_textures(egg_data)
+                self.resolve_egg_textures(egg_data, try_names=try_names, try_absolute=try_absolute)
         else:
-            self.resolve_egg_textures(egg)
+            self.resolve_egg_textures(egg, try_names=try_names, try_absolute=try_absolute)
 
     def remove_egg_materials(self, egg: EggData) -> None:
         ctx = self.egg_datas[egg]
