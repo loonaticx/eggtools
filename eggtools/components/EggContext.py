@@ -1,6 +1,6 @@
 from ordered_set import OrderedSet
 from panda3d.core import Filename
-from panda3d.egg import EggTextureCollection, EggTexture, EggNode
+from panda3d.egg import EggTextureCollection, EggTexture, EggNode, EggGroup
 
 from eggtools.components.EggDataContext import EggDataContext
 
@@ -94,24 +94,42 @@ class EggContext:
         texcollection.findUsedTextures(egg_node)
         return texcollection.getTextures()
 
-    def points_by_textures(self, egg_node: EggNode) -> dict[ "EggTexture | PointData"]:
+    def points_by_textures(self, egg_node: EggNode) -> dict["EggTexture | PointData"]:
         """
         :returns: a list of PointDatas (EggVertexes and UV coordinates) for each EggTexture on the EggNode.
 
         Struct:
         { EggTexture: [ PointData, ... ] }
         """
-        point_datas = self.point_data[egg_node]
         node_textures = dict()
-        for egg_texture in self.get_used_node_textures(egg_node):
-            node_textures[egg_texture] = []
+        nodes = OrderedSet()
 
-        for point_data in point_datas:
-            point_texture = point_data.egg_texture
-            if not point_texture:
+        if isinstance(egg_node, EggGroup):
+            # Note: Some extra junk like EggVertex or EggPolygon objects might fall into here
+            # They shouldn't be, since we are not focused on them, but it's ok
+            nodes.add(egg_node)
+            # we will do a light traversal, not going to worry about full recursion right now
+            for child_node in egg_node.getChildren():
+                if isinstance(child_node, EggGroup):
+                    nodes.add(child_node)
+        else:
+            nodes.add(egg_node)
+
+        for target_node in nodes:
+            point_datas = self.point_data.get(target_node)
+            if not point_datas:
                 continue
-            # BETTER NOT DESYNC FOOL
-            node_textures[point_texture].append(point_data)
+
+            for egg_texture in self.get_used_node_textures(target_node):
+                if not node_textures.get(egg_texture):
+                    node_textures[egg_texture] = []
+
+            for point_data in point_datas:
+                point_texture = point_data.egg_texture
+                if not point_texture:
+                    continue
+                # BETTER NOT DESYNC FOOL
+                node_textures[point_texture].append(point_data)
 
         return node_textures
 
