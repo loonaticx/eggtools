@@ -50,14 +50,14 @@ class EggContext:
         # If egg has been altered in memory, it is considered dirty and subject to overwrite what's on the disk.
         self.dirty = False
 
-        self.egg_textures = set()
+        self.egg_textures = OrderedSet()
         self.egg_texture_collection = EggTextureCollection()
-        self.egg_materials = set()
-        self.egg_attributes = set()
+        self.egg_materials = OrderedSet()
+        self.egg_attributes = OrderedSet()
         self.egg_timestamp_old: int | bool = False
         self.egg_save_timestamp = False
-        self.egg_ext_file_refs = set()
-        self.egg_groups = set()
+        self.egg_ext_file_refs = OrderedSet()
+        self.egg_groups = OrderedSet()
 
         # True if the corresponding egg data was created during code execution.
         # More specifically used for flagging not-iter-safe eggs during an EggMan traversal.
@@ -129,14 +129,14 @@ class EggContext:
         # Goobye
         self.egg_data_loopback = None
         self.dirty = False
-        self.egg_textures = set()
+        self.egg_textures = OrderedSet()
         self.egg_texture_collection = EggTextureCollection()
-        self.egg_materials = set()
-        self.egg_attributes = set()
+        self.egg_materials = OrderedSet()
+        self.egg_attributes = OrderedSet()
         self.egg_timestamp_old = False
         self.egg_save_timestamp = False
-        self.egg_ext_file_refs = set()
-        self.egg_groups = set()
+        self.egg_ext_file_refs = OrderedSet()
+        self.egg_groups = OrderedSet()
         self.egg_generated = False
         self.point_data = dict()
         self.filename = Filename()
