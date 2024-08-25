@@ -41,6 +41,24 @@ class PointData:
             allY.append(v)
         return PointUtils.bounding_box([allX, allY])
 
+    """
+    Debug Methods
+    """
+
     def print_uvs(self, multiplier=1):
         for u, v in self.egg_vertex_uvs.values():
             print(f"u: {u * multiplier} v: {v * multiplier}")
+
+
+class PointHelper:
+    @staticmethod
+    def unify_point_datas(point_datas) -> PointData:
+        """
+        Takes the vertex_uv properties of all the provided PointDatas and aggregates them into one
+        """
+        point_vertexes = dict()
+        for pd in point_datas:
+            point_vertexes = point_vertexes | pd.egg_vertex_uvs
+        point_filename = point_datas[0].egg_filename
+        point_texture = point_datas[0].egg_texture
+        return PointData(point_filename, point_vertexes, point_texture)

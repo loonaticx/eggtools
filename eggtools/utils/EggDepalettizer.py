@@ -3,7 +3,7 @@ from panda3d.egg import EggTexture, EggData, EggPolygon, EggNode
 
 from eggtools.EggMan import EggMan
 from eggtools.components.EggDataContext import EggDataContext
-from eggtools.components.points.PointData import PointData
+from eggtools.components.points.PointData import PointData, PointHelper
 
 from eggtools.utils import ImageUtils
 
@@ -61,16 +61,10 @@ class Depalettizer:
         for point_texture in point_texture_lookup.keys():
             # Well, now we have PointDatas whose only differences are the different egg_vertex_uvs.
             # Let's aggregate them...
-            point_vertexes = dict()
             point_datas = point_texture_lookup[point_texture]
-            point_filename = None
-            for pd in point_datas:
-                point_vertexes = point_vertexes | pd.egg_vertex_uvs
-                # I am aware that this variable will continuously get changed
-                point_filename = pd.egg_filename
 
             # THIS is all of our aggregated point data. Don't mind the similar variable names here.
-            point_data = PointData(point_filename, point_vertexes, point_texture)
+            point_data = PointHelper.unify_point_datas(point_datas)
 
             # Generates and writes out the new texture images.
             # If we can't create a cropped image let's bounce before something explodes for now
