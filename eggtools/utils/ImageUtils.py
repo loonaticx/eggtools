@@ -1,3 +1,5 @@
+import logging
+
 from PIL import Image
 from panda3d.core import Filename
 import os
@@ -15,7 +17,11 @@ def crop_image_to_box(
     tex_node_name = egg_texture.getName()
     tex_filename = egg_texture.getFilename()
 
-    image_src = Image.open(Filename.toOsSpecific(tex_filename))
+    image_filepath = Filename.toOsSpecific(tex_filename)
+    if not os.path.isfile(image_filepath):
+        logging.warning(f"Can't find image file {image_filepath} to work with! Skipping crop for TRef {tex_node_name}")
+        return Filename()
+    image_src = Image.open(image_filepath)
     src_width, src_height = image_src.size
     # Smallest res allowed is 1 pixel
     src_width = max(1, src_width)
@@ -52,7 +58,7 @@ def crop_image_to_box(
         # Note: This may be a cause of bad image outputs.
         image_cropped = image_src.crop(crop_bounds)
     except:
-        return
+        return Filename()
 
     image_cropped_name = tex_filename.getBasenameWoExtension() + f"_cropped_{tex_node_name}_{filename_suffix}"
     # At the very moment lets not try to merge node textures who share identical cropped textures
