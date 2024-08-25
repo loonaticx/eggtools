@@ -129,7 +129,13 @@ class EggContext:
                 if not point_texture:
                     continue
                 # BETTER NOT DESYNC FOOL
-                node_textures[point_texture].append(point_data)
+                foolish_node = node_textures.get(point_texture)
+                if not foolish_node:
+                    for node_texture in node_textures.keys():
+                        if point_texture.isEquivalentTo(node_texture, EggTexture.E_tref_name):
+                            node_textures[node_texture].append(point_data)
+                else:
+                    node_textures[point_texture].append(point_data)
 
         return node_textures
 
