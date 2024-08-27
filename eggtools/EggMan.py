@@ -175,16 +175,20 @@ class EggMan(object):
                 # { EggGroupName { { Polygon_TREFNAME : { "vertexID" : [ U, V ] } } }
                 # For now can we only use one tref for Polygon entries, even though having more is possible
                 polyTexture = child.getTexture()
-                if not polyTexture:
-                    continue
+                # Even if the poly doesn't have a texture, we should still traverse it for now
+                # let's not discriminate..
+                # if not polyTexture:
+                #     continue
                 parent_node = child.getParent()
 
                 vertex_uvs = {}
                 # UV name attributes are handled separately since they are tangible
                 for egg_vertex in child.getVertices():
+                    u, v = [None, None]
                     if egg_vertex.hasUv():
                         u, v = egg_vertex.getUv()
-                        vertex_uvs[egg_vertex] = [u, v]
+                    vertex_uvs[egg_vertex] = [u, v]
+
 
                 if not ctx.point_data.get(parent_node):
                     ctx.point_data[parent_node] = OrderedSet()
