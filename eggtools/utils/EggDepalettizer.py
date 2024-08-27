@@ -1,11 +1,15 @@
-from panda3d.core import Filename, StringStream, LPoint2d
-from panda3d.egg import EggTexture, EggData, EggPolygon, EggNode
+import os
+
+from panda3d.core import StringStream, LPoint2d, Filename
+from panda3d.egg import EggTexture, EggPolygon, EggNode
 
 from eggtools.EggMan import EggMan
 from eggtools.components.EggDataContext import EggDataContext
+from eggtools.components.images.ImageMarginer import ImageMarginer
 from eggtools.components.points.PointData import PointData, PointHelper
 
 from eggtools.components.images import ImageUtils
+from eggtools.utils.MarginCalculator import MarginCalculator
 
 
 class Depalettizer:
@@ -48,7 +52,62 @@ class Depalettizer:
             newY += 0.5
             vertex.set_uv(LPoint2d(newX, newY))
 
-    def depalettize_node(self, egg_data: EggDataContext, egg_node: EggNode, clamp_uvs=True):
+    def depalettize_image(self,
+                          point_data:PointData,
+                          dest_file:Filename,
+                          image_kwargs,
+                          write_to_disk=True,
+                          margin_config=None,
+                          ):
+        """
+        :param PointData point_data: Includes the texture and uvs needed to generate a bbox
+
+        """
+        # If we can't create a cropped image let's bounce before something explodes for now
+        cropped_image = ImageUtils.crop_image_to_box(
+            point_data,
+            # f"{egg_node.getName()}_{i}",
+            margin_u = self.padding_u,
+            margin_v = self.padding_v,
+            repeat_image = False
+        )
+        if not cropped_image:
+            return
+
+        crop_width, crop_height = cropped_image.size
+
+        if margin_config:
+            marginer = ImageMarginer(cropped_image)
+            # Gonna interrupt here. Now that we have cropped the image, lets add padding for now
+            # It will extend the image a bit
+            margin_coords, _ = MarginCalculator.get_margined_by_ratio(
+                crop_width, crop_height,
+                self.padding_u, self.padding_v
+            )
+            margin_x, margin_y = margin_coords
+
+            pass
+
+        expanded_image = marginer.create_margined_image(margin_x, margin_y)
+
+        if not write_to_disk:
+            return
+
+        file_ext = dest_file.getExtension()
+
+        if file_ext == "png":
+            image_kwargs['quality'] = 95  # intended
+        elif file_ext == "jpg":
+            # imageKwargs['subsampling'] = 0
+            image_kwargs['quality'] = 'keep'
+        expanded_image.save(
+            Filename.toOsSpecific(dest_file),
+            **image_kwargs
+        )
+
+
+
+    def depalettize_node(self, egg_data: EggDataContext, egg_node: EggNode, clamp_uvs=True, image_kwargs=dict()):
         """
         Depalettizes an EggNode completely.
 
@@ -73,23 +132,33 @@ class Depalettizer:
             point_data = PointHelper.unify_point_datas(point_datas)
 
             # Generates and writes out the new texture images.
-            # If we can't create a cropped image let's bounce before something explodes for now
-            cropped_filename = ImageUtils.crop_image_to_box(
-                point_data,
-                f"{egg_node.getName()}_{i}",
-                margin_u = self.padding_u,
-                margin_v = self.padding_v,
-                repeat_image = False
+            image_kwargs = {}
+            file_ext = point_texture.getFilename().getExtension().lower()
+
+
+            image_cropped_name = point_texture.getBasenameWoExtension() + f"_cropped_{point_texture}_{str(i)}"
+            # At the very moment lets not try to merge node textures who share identical cropped textures
+            image_cropped_filename = Filename.fromOsSpecific(
+                os.path.join(
+                    point_data.egg_filename.getDirname(),
+                    f"{image_cropped_name}.{file_ext}"
+
+                )
             )
-            if not cropped_filename:
+            depal_texture = self.depalettize_image(point_data, image_cropped_filename)
+
+
+            if not depal_texture:
                 continue
+
+
 
             # Cross my fingers that this works babyy!!
             self.normalize_uvs(point_data)
 
             # Generate a new EggTexture, only differences here is just the filename/paths.
             egg_texture_new = self.eggman.rebase_egg_texture(
-                cropped_filename.getBasenameWoExtension(), cropped_filename, point_data.egg_texture
+                image_cropped_filename.getBasenameWoExtension(), image_cropped_filename, point_data.egg_texture
             )
 
             recorded_texture = ctx.egg_texture_collection.findFilename(egg_texture_new.getFilename())

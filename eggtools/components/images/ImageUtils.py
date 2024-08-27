@@ -1,17 +1,16 @@
 import logging
 
-from PIL import Image
+from PIL import Image, ImageChops
 from panda3d.core import Filename
 import os
 
-from eggtools.components.images.ImageMarginer import ImageMarginer
 from eggtools.components.points.PointData import PointData
 from eggtools.utils.MarginCalculator import MarginCalculator
 
 
 def crop_image_to_box(
-        point_data: PointData, filename_suffix="", repeat_image=True,
-        margin_u=0., margin_v=0.) -> Filename:
+        point_data: PointData, repeat_image=True,
+        margin_u=0., margin_v=0.) -> Image:
     # i need to change filename_suffix to something that continuously increments
     egg_texture = point_data.egg_texture
     tex_node_name = egg_texture.getName()
@@ -31,9 +30,6 @@ def crop_image_to_box(
     box_coords = point_data.get_bbox()
     xMin, yMin = box_coords[0]
     xMax, yMax = box_coords[1]
-
-    image_kwargs = {}
-    file_ext = tex_filename.getExtension().lower()
 
     # Cropped out area, we should keep note of this new image size.
     crop_x1 = max(1, src_width * xMin)  # Right
@@ -58,29 +54,15 @@ def crop_image_to_box(
         # Note: This may be a cause of bad image outputs.
         image_cropped = image_src.crop(crop_bounds)
     except:
-        return Filename()
+        return
 
-    image_cropped_name = tex_filename.getBasenameWoExtension() + f"_cropped_{tex_node_name}_{filename_suffix}"
-    # At the very moment lets not try to merge node textures who share identical cropped textures
-    image_cropped_filename = Filename.fromOsSpecific(
-        os.path.join(
-            base_filename.getDirname(),
-            f"{image_cropped_name}.{file_ext}"
-
-        )
-    )
     crop_width, crop_height = image_cropped.size
     # Smallest res allowed is 1 pixel
     crop_width = max(1, crop_width)
     crop_height = max(1, crop_height)
 
-    if file_ext == "png":
-        image_kwargs['quality'] = 95  # intended
-    elif file_ext == "jpg":
-        # imageKwargs['subsampling'] = 0
-        image_kwargs['quality'] = 'keep'
-
-    # TODO: migrate this to ImageMarginer
+    # This is a little bit different than the ImageMarginer's repeat option.
+    # This is an obligation for images that have a repeating texture, which need to conform to the new UVs.
     if repeat_image:
         if crop_height > src_height or crop_width > src_width:
             # The cropped image's width/height is larger than the source, we need to repeat it
@@ -98,19 +80,7 @@ def crop_image_to_box(
 
             image_cropped = image_crop_copy
 
-    # Gonna interrupt here. Now that we have cropped the image, lets add padding for now
-    # It will extend the image a bit
-    margin_coords, _ = MarginCalculator.get_margined_by_ratio(crop_width, crop_height, margin_u, margin_v)
-    margin_x, margin_y = margin_coords
-
-    marginer = ImageMarginer(image_cropped)
-    expanded_image = marginer.create_margined_image(margin_x, margin_y)
-
-    expanded_image.save(
-        Filename.toOsSpecific(image_cropped_filename),
-        **image_kwargs
-    )
-    return image_cropped_filename
+    return image_cropped
 
 
 ## we can migrate functions below somewhere else
@@ -128,3 +98,13 @@ def crop_images_to_box_eggnodes(point_datas, repeat_image=True):
     for point_data in point_datas:
         crop_image_to_box(point_data, str(i), repeat_image)
         i += 1
+
+
+#####
+
+def trim_transparency(image: Image):
+    bg = Image.new(image.mode, image.size)
+    diff = ImageChops.difference(image, bg)
+    bbox = diff.getbbox()
+    if bbox:
+        return image.crop(bbox)
