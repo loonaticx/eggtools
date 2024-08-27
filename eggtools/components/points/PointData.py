@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from panda3d.core import Filename
 from panda3d.egg import EggTexture
 from . import PointUtils
+from .PointUtils import PointEnum
 
 
 @dataclass
@@ -12,6 +13,9 @@ class PointData:
 
     Note: Not intended to be used for polygons that have more than one TRef entry, such as used in multitexturing.
     """
+
+    def __str__(self):
+        return f"PointData: {len(self.egg_vertex_uvs.keys())} vertexes registered"
 
     def __hash__(self):
         return hash(id(self))
@@ -40,6 +44,16 @@ class PointData:
             allX.append(u)
             allY.append(v)
         return PointUtils.bounding_box([allX, allY])
+
+    def get_coords(self, sort_by: PointEnum = None):
+        # note: yes it is possible ican do this better with numpy
+        # but numpy is only used for matplotlib rn
+        coords = list(self.egg_vertex_uvs.values())
+        if sort_by == PointEnum.U:
+            coords.sort(key = PointUtils.sort_points_u)
+        elif sort_by == PointEnum.V:
+            coords.sort(key = PointUtils.sort_points_v)
+        return coords
 
     """
     Debug Methods
