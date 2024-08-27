@@ -45,6 +45,21 @@ class PointData:
             allY.append(v)
         return PointUtils.bounding_box([allX, allY])
 
+    def get_all_vertices(self):
+        verts = list(self.egg_vertex_uvs.keys())
+        Vx = []
+        Vy = []
+        Vz = []
+        # according to CNC machines, they call the 4th dimension the A-axis
+        Va = []
+        for egg_vertex in verts:
+            x, y, z, a = egg_vertex.getPos4()
+            Vx.append(x)
+            Vy.append(y)
+            Vz.append(z)
+            Va.append(a)
+        return Vx, Vy, Vz, Va
+
     def get_coords(self, sort_by: PointEnum = None):
         # note: yes it is possible ican do this better with numpy
         # but numpy is only used for matplotlib rn
