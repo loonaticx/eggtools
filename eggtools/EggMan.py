@@ -759,24 +759,22 @@ class EggMan(object):
             tex_file = Path(tex_path).name
             if try_names:
                 tex_file = self.NameResolver.try_different_names(tex_file)
-            for search_path in self.NameResolver.search_paths:
-                if try_absolute:
-                    possible_path = self.NameResolver.try_searching_paths(tex_file)
-                    if possible_path:
-                        logging.debug(f"Rebasing to absolute texture path for {possible_path} ({search_path}")
-                        self.mark_dirty(ctx)
-                        return possible_path
-                else:
-                    new_tex_file = Filename.fromOsSpecific(os.path.join(search_path, tex_file))
-                    if not os.path.isfile(new_tex_file):
-                        continue
-                    logging.info(f"Rebasing texture path for {tex_file} to {search_path}")
-                    tex_path = os.path.relpath(
-                        new_tex_file, os.path.dirname(os.path.abspath(ctx.filename))
-                    ).replace(os.sep, '/')
-                    logging.debug(f"new tex path--> {tex_path} ({search_path}")
+            if try_absolute:
+                possible_path = self.NameResolver.try_searching_paths(tex_file)
+                if possible_path:
                     self.mark_dirty(ctx)
-                    return tex_path
+                    return possible_path
+            for search_path in self.NameResolver.search_paths:
+                new_tex_file = Filename.fromOsSpecific(os.path.join(search_path, tex_file))
+                if not os.path.isfile(new_tex_file):
+                    continue
+                logging.info(f"Rebasing texture path for {tex_file} to {search_path}")
+                tex_path = os.path.relpath(
+                    new_tex_file, os.path.dirname(os.path.abspath(ctx.filename))
+                ).replace(os.sep, '/')
+                logging.debug(f"new tex path--> {tex_path} ({search_path}")
+                self.mark_dirty(ctx)
+                return tex_path
             return tex_path
 
         ctx = self.egg_datas[egg]
@@ -827,6 +825,17 @@ class EggMan(object):
                 logging.info(f"Found texture {egg_texture.getFilename()}")
                 logging.debug(f"(filepath){os.path.abspath(egg_texture.getFullpath())}")
                 logging.debug(f"(fixedpath){fixed_path}")
+
+    @verify_integrity
+    def use_absolute_texpaths(self, egg:EggData):
+        ctx = self.egg_datas[egg]
+        for egg_texture in ctx.egg_textures:
+            filename = egg_texture.getFilename()
+            if not filename.isFullyQualified():
+                possible_path = self.NameResolver.try_searching_paths(filename.toOsSpecific())
+                if os.path.isfile(possible_path):
+                    self.repath_egg_texture(egg, egg_texture,possible_path)
+        pass
 
     def resolve_external_refs(self, egg: EggData):
         ctx = self.egg_datas[egg]
