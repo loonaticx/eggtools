@@ -155,13 +155,14 @@ class EggMan(object):
             if isinstance(child, EggExternalReference):
                 ctx.egg_ext_file_refs.add(child)
 
-    def merge_eggs(self, destination_egg: EggData, target_eggs: list[EggData] | EggData) -> None:
     # endregion
 
     """
     EggData Management
     """
     # region
+
+    def merge_eggs(self, destination_egg: EggData, target_eggs: list[EggData] | EggData) -> None:
         """
         Source egg(s) will be removed from egg datas and cannot be searched for anymore.
 
