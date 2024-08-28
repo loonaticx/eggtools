@@ -1,19 +1,23 @@
 import os
 
+from PIL.Image import Image
 from panda3d.core import StringStream, LPoint2d, Filename
-from panda3d.egg import EggTexture, EggPolygon, EggNode
+from panda3d.egg import EggPolygon, EggNode
 
 from eggtools.EggMan import EggMan
 from eggtools.components.EggDataContext import EggDataContext
+from eggtools.components.EggEnums import TextureWrapMode
 from eggtools.components.images.ImageMarginer import ImageMarginer
 from eggtools.components.points.PointData import PointData, PointHelper
 
-from eggtools.components.images import ImageUtils
+from eggtools.components.images import ImageUtils, ImageFill
 from eggtools.utils.MarginCalculator import MarginCalculator
 
 
+# how to debug:
+# compare the size of the unused space (margins) with the texture and the uvs
 class Depalettizer:
-    def __init__(self, file_list: list, padding_u=0.001, padding_v=0.001, eggman: EggMan = None):
+    def __init__(self, file_list: list, padding_u: float = 0.001, padding_v: float = 0.001, eggman: EggMan = None):
         """
         By default, padding is equivalent to 1% of the texture size [0-1]
         (meaning that the uv would effectively be 99% of its normalized scale)
@@ -29,7 +33,7 @@ class Depalettizer:
         # No, we need to effectively 'inject' these new texture headers into our working EggData.
         self.raw_data = []
 
-    def normalize_uvs(self, point_data: PointData):
+    def normalize_uvs(self, point_data: PointData) -> None:
         bbox = point_data.get_bbox()
         min_x, min_y = bbox[0]
         max_x, max_y = bbox[1]
@@ -53,68 +57,64 @@ class Depalettizer:
             vertex.set_uv(LPoint2d(newX, newY))
 
     def depalettize_image(self,
-                          point_data:PointData,
-                          dest_file:Filename,
-                          image_kwargs,
-                          write_to_disk=True,
-                          margin_config=None,
-                          ):
+                          point_data: PointData,
+                          dest_file: Filename,
+                          image_kwargs: dict,
+                          write_to_disk: bool = True,
+                          fill_type: ImageFill.FillType = None,
+                          ) -> Image | None:
         """
         :param PointData point_data: Includes the texture and uvs needed to generate a bbox
-
         """
         # If we can't create a cropped image let's bounce before something explodes for now
-        cropped_image = ImageUtils.crop_image_to_box(
-            point_data,
-            # f"{egg_node.getName()}_{i}",
-            margin_u = self.padding_u,
-            margin_v = self.padding_v,
+        bbox_coords = point_data.get_bbox()
+        source_texture = point_data.egg_texture
+        cropped_texture = ImageUtils.crop_image_to_box(
+            texture = source_texture,
+            bounding_box = bbox_coords,
             repeat_image = False
         )
-        if not cropped_image:
+        if not cropped_texture:
             return
 
-        crop_width, crop_height = cropped_image.size
+        crop_width, crop_height = cropped_texture.size
 
-        if margin_config:
-            marginer = ImageMarginer(cropped_image)
-            # Gonna interrupt here. Now that we have cropped the image, lets add padding for now
-            # It will extend the image a bit
-            margin_coords, _ = MarginCalculator.get_margined_by_ratio(
-                crop_width, crop_height,
-                self.padding_u, self.padding_v
-            )
-            margin_x, margin_y = margin_coords
-
-            pass
-
-        expanded_image = marginer.create_margined_image(margin_x, margin_y)
-
-        if not write_to_disk:
-            return
-
-        file_ext = dest_file.getExtension()
-
-        if file_ext == "png":
-            image_kwargs['quality'] = 95  # intended
-        elif file_ext == "jpg":
-            # imageKwargs['subsampling'] = 0
-            image_kwargs['quality'] = 'keep'
-        expanded_image.save(
-            Filename.toOsSpecific(dest_file),
-            **image_kwargs
+        margin_coords, _ = MarginCalculator.get_margined_by_ratio(
+            crop_width, crop_height,
+            self.padding_u, self.padding_v
         )
+        margin_x, margin_y = margin_coords
 
+        expanded_image = ImageMarginer().create_margined_image(cropped_texture, fill_type, margin_x, margin_y)
 
+        if write_to_disk:
+            file_ext = dest_file.getExtension()
 
-    def depalettize_node(self, egg_data: EggDataContext, egg_node: EggNode, clamp_uvs=True, image_kwargs=dict()):
+            if file_ext == "png":
+                image_kwargs['quality'] = 95  # intended
+            elif file_ext == "jpg":
+                # imageKwargs['subsampling'] = 0
+                image_kwargs['quality'] = 'keep'
+            expanded_image.save(
+                Filename.toOsSpecific(dest_file),
+                **image_kwargs
+            )
+
+        return expanded_image
+
+    def depalettize_node(self,
+                         egg_data: EggDataContext, egg_node: EggNode,
+                         image_kwargs: dict = None,
+                         uv_wrap_mode: TextureWrapMode = TextureWrapMode.Unspecified,
+                         ):
         """
         Depalettizes an EggNode completely.
 
         WILL affect model/egg data
-
-        :param bool clamp_uvs: Sets the UV wrap mode to clamp. Strongly recommended due to padding artifacts.
         """
+        if not image_kwargs:
+            image_kwargs = dict()
+
         ctx = self.eggman.egg_datas[egg_data]
 
         i = 0
@@ -132,9 +132,7 @@ class Depalettizer:
             point_data = PointHelper.unify_point_datas(point_datas)
 
             # Generates and writes out the new texture images.
-            image_kwargs = {}
             file_ext = point_texture.getFilename().getExtension().lower()
-
 
             image_cropped_name = point_texture.getBasenameWoExtension() + f"_cropped_{point_texture}_{str(i)}"
             # At the very moment lets not try to merge node textures who share identical cropped textures
@@ -145,13 +143,10 @@ class Depalettizer:
 
                 )
             )
-            depal_texture = self.depalettize_image(point_data, image_cropped_filename)
-
+            depal_texture = self.depalettize_image(point_data, image_cropped_filename, image_kwargs)
 
             if not depal_texture:
                 continue
-
-
 
             # Cross my fingers that this works babyy!!
             self.normalize_uvs(point_data)
@@ -175,14 +170,13 @@ class Depalettizer:
                         child.clearTexture()
                         child.addTexture(recorded_texture)
 
-            # Strongly recommended to keep this on by default since the margining/texture filtering
-            # may get a bit distracting
-            if clamp_uvs:
-                point_data.egg_texture.setWrapU(EggTexture.WM_clamp)
-                point_data.egg_texture.setWrapV(EggTexture.WM_clamp)
+            point_data.egg_texture.setWrapU(uv_wrap_mode)
+            point_data.egg_texture.setWrapV(uv_wrap_mode)
             i += 1
 
-    def append_new_eggdata(self, egg_data):
+        return True
+
+    def append_new_eggdata(self, egg_data: EggDataContext):
         # This will lead to redundant texture entries, but it's ok for now, because they get cleaned up
         # later down the line anyway
 
@@ -200,7 +194,8 @@ class Depalettizer:
         ctx = self.eggman.egg_datas[egg_data_new]
         ctx.egg_generated = True
 
-    def depalettize_egg(self, egg_data, clamp_uvs=True):
+    def depalettize_egg(self, egg_data: EggDataContext, image_opts: dict = None,
+                        uv_wrap_mode: TextureWrapMode = TextureWrapMode.Unspecified):
         """
         Depalettizes an Egg file (EggData) completely.
 
@@ -210,11 +205,11 @@ class Depalettizer:
         ctx = self.eggman.egg_datas[egg_data]
         for egg_node in ctx.point_data.keys():
             if ctx.configured:
-                self.depalettize_node(egg_data, egg_node, clamp_uvs = clamp_uvs)
+                self.depalettize_node(egg_data, egg_node, image_kwargs = image_opts, uv_wrap_mode = uv_wrap_mode)
                 # ctx.merge_replace(new_ctx)
         self.append_new_eggdata(egg_data)
 
-    def depalettize_all(self, clamp_uvs=True):
+    def depalettize_all(self, image_opts: dict = None, uv_wrap_mode: TextureWrapMode = TextureWrapMode.Unspecified):
         """
         Depalettizes all Egg files registered in EggMan.
         """
@@ -224,6 +219,6 @@ class Depalettizer:
         for egg_data in context_snapshot:
             ctx = self.eggman.egg_datas.get(egg_data)
             if ctx and not ctx.egg_generated:
-                self.depalettize_egg(egg_data, clamp_uvs)
+                self.depalettize_egg(egg_data, image_opts = image_opts, uv_wrap_mode = uv_wrap_mode)
 
         self.eggman.remove_texture_duplicates()

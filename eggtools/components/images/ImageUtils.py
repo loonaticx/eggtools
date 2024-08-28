@@ -1,35 +1,36 @@
 import logging
 
-from PIL import Image, ImageChops
-from panda3d.core import Filename
+from PIL import Image, ImageChops, ImageOps
+from panda3d.core import Filename, Vec2
 import os
 
-from eggtools.components.points.PointData import PointData
-from eggtools.utils.MarginCalculator import MarginCalculator
+from panda3d.egg import EggTexture
+
+from eggtools.components.images.ImageReference import ImageReference
 
 
-def crop_image_to_box(
-        point_data: PointData, repeat_image=True,
-        margin_u=0., margin_v=0.) -> Image:
-    # i need to change filename_suffix to something that continuously increments
-    egg_texture = point_data.egg_texture
-    tex_node_name = egg_texture.getName()
-    tex_filename = egg_texture.getFilename()
+def crop_image_to_box(texture: EggTexture | ImageReference, bounding_box: Vec2, repeat_image: bool = True) -> Image:
+    """
+    :param bool repeat_image: If the resultant image is larger than the cropped image, just keep repeating/tiling it.
+    This is useful with meshes that have repeating textures.
+
+    :param texture: An object that holds reference data to a texture
+    """
+    tex_node_name = texture.getName()
+    tex_filename = texture.getFilename()
 
     image_filepath = Filename.toOsSpecific(tex_filename)
     if not os.path.isfile(image_filepath):
         logging.warning(f"Can't find image file {image_filepath} to work with! Skipping crop for TRef {tex_node_name}")
         return Filename()
-    image_src = Image.open(image_filepath)
+    image_src: Image = Image.open(image_filepath)
     src_width, src_height = image_src.size
     # Smallest res allowed is 1 pixel
     src_width = max(1, src_width)
     src_height = max(1, src_height)
 
-    base_filename = point_data.egg_filename
-    box_coords = point_data.get_bbox()
-    xMin, yMin = box_coords[0]
-    xMax, yMax = box_coords[1]
+    xMin, yMin = bounding_box[0]
+    xMax, yMax = bounding_box[1]
 
     # Cropped out area, we should keep note of this new image size.
     crop_x1 = max(1, src_width * xMin)  # Right
@@ -52,6 +53,7 @@ def crop_image_to_box(
         # Sometimes we end up catching stragglers that aren't palettized, which make a fuss
         # Coordinate 'lower' is less than 'upper'
         # Note: This may be a cause of bad image outputs.
+        # Todo: improve handling of this
         image_cropped = image_src.crop(crop_bounds)
     except:
         return
@@ -83,24 +85,12 @@ def crop_image_to_box(
     return image_cropped
 
 
-## we can migrate functions below somewhere else
-def crop_images_to_box(point_datas, repeat_image=True):
-    i = 0
-    for point_data in point_datas:
-        crop_image_to_box(point_data, str(i), repeat_image)
-        i += 1
-
-
-# idk if i want this in eggman..., do i?
-# well, we kind of have to since pointdata requires eggdata.. and yeah
-def crop_images_to_box_eggnodes(point_datas, repeat_image=True):
-    i = 0
-    for point_data in point_datas:
-        crop_image_to_box(point_data, str(i), repeat_image)
-        i += 1
-
-
 #####
+
+def get_alpha_mask(image: Image) -> Image:
+    r, g, b, a = image.split()
+    return ImageOps.invert(a.convert("L"))
+
 
 def trim_transparency(image: Image):
     bg = Image.new(image.mode, image.size)

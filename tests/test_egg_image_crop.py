@@ -26,10 +26,14 @@ for node in ctx.egg_groups:
     print(f"+++ point_data traversal for {node.getName()} +++")
     for point_data in point_datas:
         print(f"--- run {i} ---")
-        cropped_file = ImageUtils.crop_image_to_box(point_data, str(i))
+        texture = point_data.egg_texture
         bbox = point_data.get_bbox()
         xmin, ymin = bbox[0]
         xmax, ymax = bbox[1]
+        cropped_file = ImageUtils.crop_image_to_box(
+            bounding_box = bbox,
+            texture = texture
+        )
         print(f"bbox - {point_data.get_bbox()} | dim: ({xmax - xmin}, {ymax - ymin})")
         print(f"pointdata_filename - {point_data.egg_filename}")
         print(f"cropped_file - {cropped_file}")
