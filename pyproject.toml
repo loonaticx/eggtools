@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "corporateclash-eggtools"
+name = "panda3d-eggtools"
 version = "2.2.0"
 description = "Library of utilities catered towards managing Panda3D egg files."
 
-authors = ["The Corporate Clash Crew"]
+authors = ["Loonatic, Corporate Clash"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
