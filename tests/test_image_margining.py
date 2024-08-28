@@ -11,9 +11,9 @@ from eggtools.components.images.ImageMarginer import *
 from PIL import Image
 
 test_image_1 = Image.open(Filename.toOsSpecific(test_image_1))
-print(test_image_1.size)
-marginer = ImageMarginer(test_image_1, MarginMode.Inpaint)
-image_margined = marginer.create_margined_image(2, 2)
+# print(test_image_1.size)
+marginer = ImageMarginer()
+image_margined = marginer.create_margined_image(test_image_1, FillMode.Inpaint, 2, 2)
 # image_expanded = marginer.expand_image(test_image_1, 1024, 1024)
 # image_expanded.show()
 # margin_mask_test = marginer.make_margin_mask(test_image_1.size, image_expanded.size)
