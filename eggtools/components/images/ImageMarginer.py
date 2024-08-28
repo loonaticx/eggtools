@@ -10,11 +10,16 @@ class ImageMarginer:
     margin_x = 0.001
     margin_y = 0.001
 
-    def __init__(self, fill_type: FillType | None = SolidFill):
-        if not isinstance(fill_type, FillType):
+    def _get_fill_type(self, fill_type):
+        if isinstance(fill_type, FillMode):
+            fill_type = fill_type.value()
+        elif not isinstance(fill_type, FillType):
             # Maybe still a fill mode
             fill_type = FillTypes.get(fill_type, UnknownFill)()
-        self.fill_type = fill_type
+        return fill_type
+
+    def __init__(self, fill_type: FillMode | FillType | None = SolidFill):
+        self.fill_type = self._get_fill_type(fill_type)
 
     @staticmethod
     def expand_image(source_image: Image, margin_x, margin_y) -> Image:
@@ -45,14 +50,15 @@ class ImageMarginer:
 
         return new_image
 
-    def create_margined_image(self, source_image: Image, fill_type: FillType | None, margin_x=None,
-                            margin_y=None) -> Image:
+    def create_margined_image(self, source_image: Image, fill_type: FillMode | FillType | None,
+                              margin_x=None,  margin_y=None) -> Image:
         if not margin_x:
             margin_x = self.margin_x
 
         if not margin_y:
             margin_y = self.margin_y
 
+        fill_type = self._get_fill_type(fill_type)
         if not fill_type:
             fill_type = self.fill_type
 
