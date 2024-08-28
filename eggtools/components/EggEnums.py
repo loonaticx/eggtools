@@ -1,10 +1,10 @@
 """
 To promote static typing
 """
-from enum import Enum
+from enum import IntEnum
 
 
-class EggEnum(Enum):
+class EggEnum(IntEnum):
     pass
 
 
