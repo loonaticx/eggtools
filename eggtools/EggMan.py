@@ -189,7 +189,6 @@ class EggMan(object):
                         u, v = egg_vertex.getUv()
                     vertex_uvs[egg_vertex] = [u, v]
 
-
                 if not ctx.point_data.get(parent_node):
                     ctx.point_data[parent_node] = OrderedSet()
 
@@ -827,14 +826,14 @@ class EggMan(object):
                 logging.debug(f"(fixedpath){fixed_path}")
 
     @verify_integrity
-    def use_absolute_texpaths(self, egg:EggData):
+    def use_absolute_texpaths(self, egg: EggData):
         ctx = self.egg_datas[egg]
         for egg_texture in ctx.egg_textures:
             filename = egg_texture.getFilename()
             if not filename.isFullyQualified():
                 possible_path = self.NameResolver.try_searching_paths(filename.toOsSpecific())
                 if os.path.isfile(possible_path):
-                    self.repath_egg_texture(egg, egg_texture,possible_path)
+                    self.repath_egg_texture(egg, egg_texture, possible_path)
         pass
 
     def resolve_external_refs(self, egg: EggData):
@@ -990,7 +989,7 @@ class EggMan(object):
         for egg_data in self.egg_datas.keys():
             self.write_egg_manually(egg_data, custom_suffix = custom_suffix, dryrun = dryrun)
 
-    def write_egg_manually(self, egg, filename="", custom_suffix="", ):
+    def write_egg_manually(self, egg, filename="", custom_suffix="", dryrun=False):
         """
         Don't know why this currently happens, but there are instances where trying to save the egg a la writeEgg
         doesn't work. This is the alternative manual approach, where we just write out a string.
@@ -1002,17 +1001,20 @@ class EggMan(object):
         filename = Filename(filename.getFullpath() + custom_suffix)
         ctx = self.egg_datas[egg]
         if ctx.dirty:
-            # If we put uniquifyTRefs here, it will not generate .tref.png files.
-            ctx.egg_texture_collection.uniquifyTrefs()
-            if not ctx.egg_save_timestamp:
-                self.remove_timestamp(egg)
-            # We get a PermissionDenied error once in a while with models that are not scoped to the target env.
-            try:
-                with open(filename, "w") as egg_file:
-                    logging.info(f"trying to write {filename}")
-                    egg_file.write(str(egg))
-            except Exception as e:
-                print(f"Failed to save file ({e})")
+            if not dryrun:
+                # If we put uniquifyTRefs here, it will not generate .tref.png files.
+                ctx.egg_texture_collection.uniquifyTrefs()
+                if not ctx.egg_save_timestamp:
+                    self.remove_timestamp(egg)
+                # We get a PermissionDenied error once in a while with models that are not scoped to the target env.
+                try:
+                    with open(filename, "w") as egg_file:
+                        logging.info(f"trying to write {filename}")
+                        egg_file.write(str(egg))
+                except Exception as e:
+                    print(f"Failed to save file ({e})")
+            else:
+                print(egg)
         else:
             pass
             # logging.debug(f"not rewriting {filename}")
