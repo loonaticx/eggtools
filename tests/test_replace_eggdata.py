@@ -20,8 +20,10 @@ def try_replace_with_self():
 
 
 # Should return with an error
-# try_replace_with_self()
-
+try:
+    try_replace_with_self()
+except Exception as e:
+    print(e)
 
 eggman.replace_eggdata(egg, EggData())
 
