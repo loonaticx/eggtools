@@ -5,7 +5,7 @@ from . import *
 from eggtools.utils.EggDepalettizer import Depalettizer
 
 # padding_u and padding_v should be between 0 and 1
-depal = Depalettizer([test_egg], padding_u = 0.06, padding_v = 0.06, eggman = eggman)
+depal = Depalettizer([test_egg], padding_u = 0.001, padding_v = 0.001, eggman = eggman)
 
 depal.depalettize_all()
 
