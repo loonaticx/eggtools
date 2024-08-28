@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "panda3d-eggtools"
-version = "2.2.0"
+version = "2.3.0"
 description = "Library of utilities catered towards managing Panda3D egg files."
 
 authors = ["Loonatic, Corporate Clash"]
