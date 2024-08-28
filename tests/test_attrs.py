@@ -14,20 +14,23 @@ from eggtools.attributes.EggExtFileAttribute import EggExtFile, EggExtFileAttrib
 
 
 def test_egg_attrs():
-    EggAlphaAttribute("Dual")
-    EggBackstageAttribute()
-    EggBillboardAttribute("axis")
-    EggBinAttribute("ground")
-    EggCollideAttribute('none', 'none')
-    EggCollideMaskAttribute(value='from')
-    EggDCSAttribute("net")
-    EggDartAttribute("structured")
-    EggDecalAttribute()
-    EggExtFileAttribute("dummy.egg")
-    EggExtFileAttribute("tests/test_spot.egg")
-    EggModelAttribute()
-    EggSequenceAttribute()
-    EggTagAttribute("key", "val")
+    for item in ([
+        EggAlphaAttribute("Dual"),
+        EggBackstageAttribute(),
+        EggBillboardAttribute("axis"),
+        EggBinAttribute("ground"),
+        EggCollideAttribute('none', 'none'),
+        EggCollideMaskAttribute(value = 'from'),
+        EggDCSAttribute("net"),
+        EggDartAttribute("structured"),
+        EggDecalAttribute(),
+        EggExtFileAttribute("dummy.egg"),
+        EggExtFileAttribute("tests/test_spot.egg"),
+        EggModelAttribute(),
+        EggSequenceAttribute(),
+        EggTagAttribute("key", "val")
+    ]):
+        print(item)
 
 
 if __name__ == "__main__":
