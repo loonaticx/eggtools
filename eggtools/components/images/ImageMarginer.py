@@ -35,8 +35,8 @@ class ImageMarginer:
         # https://stackoverflow.com/questions/14134892/convert-image-from-pil-to-opencv-format
         # https://www.geeksforgeeks.org/add-padding-to-the-image-with-python-pillow/
         image_width, image_height = source_image.size
-        new_image_width = image_width + margin_x
-        new_image_height = image_height + margin_y
+        new_image_width = int(image_width + margin_x)
+        new_image_height = int(image_height + margin_y)
         new_image = Image.new("RGBA", (new_image_width, new_image_height))
         c_image = source_image.copy()
         x_offset = (new_image_width - source_image.width) // 2
