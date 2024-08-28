@@ -9,7 +9,8 @@ else:
 
 from eggtools.utils.EggDepalettizer import Depalettizer
 
-depal = Depalettizer([test_egg])
+# 0.05 - [8, 8] | 0.001 - [0, 0] | 0.06 - [10, 10]
+depal = Depalettizer([test_egg], padding_u=0.001, padding_v = 0.001)
 
 verbose_logging = False
 
@@ -34,4 +35,5 @@ for eggdata_after in eggdatas_after.keys():
         print(ctx_after.filename)
         print(ctx_after.filename.getFullpath())
         print(ctx_after.dirty)
-    depal.eggman.write_egg_manually(eggdata_after, custom_suffix = "crop.egg")
+    depal.eggman.write_egg_manually(eggdata_after, custom_suffix = "crop3.egg")
+
