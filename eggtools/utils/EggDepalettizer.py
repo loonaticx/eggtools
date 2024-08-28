@@ -134,7 +134,8 @@ class Depalettizer:
             # Generates and writes out the new texture images.
             file_ext = point_texture.getFilename().getExtension().lower()
 
-            image_cropped_name = point_texture.getBasenameWoExtension() + f"_cropped_{point_texture}_{str(i)}"
+            image_cropped_name = point_texture.getFilename().getBasenameWoExtension() + f"_cropped_" \
+                                                                                        f"{egg_node.getName()}_{i}"
             # At the very moment lets not try to merge node textures who share identical cropped textures
             image_cropped_filename = Filename.fromOsSpecific(
                 os.path.join(
