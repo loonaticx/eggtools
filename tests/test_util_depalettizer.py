@@ -2,17 +2,33 @@ import os
 
 from panda3d.core import *
 
-if not os.path.isfile('tests/models/test_grid_1.egg'):
-    test_egg = Filename.fromOsSpecific('models/test_grid_1.egg')
+from eggtools.EggMan import EggMan
+
+model_filename = "test_grid_1.egg"
+base_dir = "tests"
+
+if not os.path.isfile(f'{base_dir}/models/{model_filename}'):
+    test_egg = Filename.fromOsSpecific(f'models/{model_filename}')
 else:
-    test_egg = Filename.fromOsSpecific(os.path.join(os.getcwd(), 'tests/models/test_grid_1.egg'))
+    test_egg = Filename.fromOsSpecific(os.path.join(os.getcwd(), f'{base_dir}/models/{model_filename}'))
+
+eggman = EggMan(
+    egg_filepaths = [test_egg],
+    search_paths = [
+        os.path.join(os.getcwd(), f"{base_dir}/maps"),
+    ],
+)
+egg = eggman.get_egg_by_filename(test_egg)
+ctx = eggman.egg_datas[egg]
+eggman.fix_broken_texpaths(egg, try_names = False, try_absolute = True)
+
 
 from eggtools.utils.EggDepalettizer import Depalettizer
 
 # 0.05 - [8, 8] | 0.001 - [0, 0] | 0.06 - [10, 10]
-depal = Depalettizer([test_egg], padding_u=0.001, padding_v = 0.001)
+depal = Depalettizer([test_egg], padding_u=0.001, padding_v = 0.001, eggman=eggman)
 
-verbose_logging = False
+verbose_logging = True
 
 eggdatas_prior = depal.eggman.egg_datas
 for eggdata_prior in eggdatas_prior.keys():
