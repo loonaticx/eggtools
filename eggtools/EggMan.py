@@ -13,7 +13,7 @@ from __future__ import annotations
 import copy
 import logging
 from enum import Enum
-from typing import Set, Union
+from typing import Set, Union, Dict, List
 from typing import Optional
 
 from ordered_set import OrderedSet
@@ -69,7 +69,7 @@ class EggMan(object):
 
         return verify
 
-    def __init__(self, egg_filepaths: list, search_paths: list[str] = None,
+    def __init__(self, egg_filepaths: list, search_paths: List[str] = None,
                  loglevel: logging = logging.WARNING) -> None:
         logging.basicConfig(level = loglevel)
         if not search_paths:
@@ -90,7 +90,7 @@ class EggMan(object):
 
     # region
 
-    def register_eggs(self, egg_filepaths: list[Union[Filename, str]]) -> None:
+    def register_eggs(self, egg_filepaths: List[Union[Filename, str]]) -> None:
         """
         Register Egg entries with EggMan through filepaths.
         """
@@ -106,7 +106,7 @@ class EggMan(object):
             egg_data.read(fp)
             self.register_egg_data([egg_data])
 
-    def register_egg_data(self, egg_datas: list[Union[EggData, EggDataContext]]) -> None:
+    def register_egg_data(self, egg_datas: List[Union[EggData, EggDataContext]]) -> None:
         """
         Registers supplemented egg data into EggMan.
         """
@@ -210,7 +210,7 @@ class EggMan(object):
 
     # region
     def merge_eggs(self, destination_egg: EggDataContext,
-                   target_eggs: Union[list[EggDataContext], EggDataContext]) -> None:
+                   target_eggs: Union[List[EggDataContext], EggDataContext]) -> None:
         """
         Source egg(s) will be removed from egg datas and cannot be searched for anymore.
 
@@ -373,7 +373,7 @@ class EggMan(object):
 
     # region
 
-    def apply_all_attributes(self, egg_attributes: dict[EggAttribute] = None) -> None:
+    def apply_all_attributes(self, egg_attributes: Dict[EggAttribute] = None) -> None:
         """
         By default, will clear up all the defined UV names if applicable
         """
@@ -381,7 +381,7 @@ class EggMan(object):
             self.apply_attributes(egg_data, egg_attributes)
 
     @verify_integrity
-    def apply_attributes(self, egg_base: EggData, egg_attributes: dict[EggAttribute] = None) -> None:
+    def apply_attributes(self, egg_base: EggData, egg_attributes: Dict[EggAttribute] = None) -> None:
         ctx = self.egg_datas.get(egg_base)
 
         if not egg_attributes:
@@ -610,7 +610,7 @@ class EggMan(object):
         for egg_data in self.egg_datas.keys():
             self.rename_trefs(egg_data)
 
-    def get_current_textures(self, egg: EggData) -> list[EggTexture]:
+    def get_current_textures(self, egg: EggData) -> List[EggTexture]:
         # workaround attempt
         ctx = self.egg_datas[egg]
         egg_textures = []
@@ -618,12 +618,12 @@ class EggMan(object):
             egg_textures.append(texture)
         return egg_textures
 
-    def get_texture_filepaths(self, egg: EggData) -> list[Filename]:
+    def get_texture_filepaths(self, egg: EggData) -> List[Filename]:
         ctx = self.egg_datas[egg]
         # test = list(lambda texname: texname.getFilename() for texname in ctx.egg_textures)
         return [texname.getFilename() for texname in ctx.egg_textures]
 
-    def get_texture_basenames(self, egg: EggData, include_extension: bool = True) -> list[str]:
+    def get_texture_basenames(self, egg: EggData, include_extension: bool = True) -> List[str]:
         ctx = self.egg_datas[egg]
         # test = list(lambda texname: texname.getFilename() for texname in ctx.egg_textures)
         if include_extension:
@@ -696,7 +696,7 @@ class EggMan(object):
 
     # region
     def get_all_egg_filenames(self, prepend_dir=".", as_filename_object: bool = False) -> \
-            Union[list[Filename], list[str]]:
+            Union[List[Filename], List[str]]:
         filenames = list()
         for egg_data in self.egg_datas.keys():
             if as_filename_object:

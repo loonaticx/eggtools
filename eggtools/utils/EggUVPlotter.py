@@ -26,7 +26,7 @@ class MatplotPlotter:
         plt.title(title)
         plt.show()
 
-    def plot_eggnode_textures(self, ctx: EggContext, egg_nodes: Union[list[EggNode], EggNode], plot_kwargs=None,
+    def plot_eggnode_textures(self, ctx: EggContext, egg_nodes: Union[List[EggNode], EggNode], plot_kwargs=None,
                               i: int = 0, sortby: Optional[PointEnum] = None):
         if plot_kwargs is None:
             plot_kwargs = {}

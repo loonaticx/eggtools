@@ -4,7 +4,7 @@ from panda3d.egg import EggTextureCollection, EggTexture, EggNode, EggGroup
 
 from eggtools.components.EggDataContext import EggDataContext
 
-from typing import TYPE_CHECKING, Union, Optional
+from typing import TYPE_CHECKING, Union, Optional, Dict
 
 if TYPE_CHECKING:
     from eggtools.components.points.PointData import PointData
@@ -68,7 +68,7 @@ class EggContext:
         # This just indicates that the EggContext setup and ready for action.
         self.configured = False
 
-        self.point_data: dict[EggNode, OrderedSet[PointData]] = dict()
+        self.point_data: Dict[EggNode, OrderedSet[PointData]] = dict()
         # { EggNode : [PointData] }
 
         self.filename = filename
@@ -94,7 +94,7 @@ class EggContext:
         texcollection.findUsedTextures(egg_node)
         return texcollection.getTextures()
 
-    def points_by_textures(self, egg_node: EggNode) -> dict[Union["EggTexture", "PointData"]]:
+    def points_by_textures(self, egg_node: EggNode) -> Dict[Union["EggTexture", "PointData"]]:
         """
         :returns: a list of PointDatas (EggVertexes and UV coordinates) for each EggTexture on the EggNode.
 
