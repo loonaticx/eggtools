@@ -24,6 +24,10 @@ class EggVisibilityAttribute(EggAttribute):
         super().__init__(entry_type="Scalar", name="visibility", contents=self.visibility_type)
         self.visibility_type = name2id[visibility_type.lower()]
 
+    @staticmethod
+    def get_visibility_modes():
+        return name2id
+
     def _modify_polygon(self, egg_polygon, tref=None):
         target_nodes = self.target_nodes
 

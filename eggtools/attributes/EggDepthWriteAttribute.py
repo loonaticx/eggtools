@@ -19,6 +19,10 @@ class EggDepthWriteAttribute(EggAttribute):
         super().__init__(entry_type="Scalar", name="depth-write", contents=depth_type)
         self.depth_type = name2id[depth_type.lower()]
 
+    @staticmethod
+    def get_depth_write_modes():
+        return name2id
+
     def _modify_polygon(self, egg_polygon, tref=None):
         target_nodes = self.target_nodes
 

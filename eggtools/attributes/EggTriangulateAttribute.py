@@ -27,6 +27,10 @@ class EggTriangulateAttribute(EggAttribute):
         super().__init__("Modifier", "TriangulatePolygons", flag)
         self.flag = name2id[flag.lower()]
 
+    @staticmethod
+    def get_triangulate_methods():
+        return name2id
+
     def _modify_polygon(self, egg_polygon, tref):
         pass
 

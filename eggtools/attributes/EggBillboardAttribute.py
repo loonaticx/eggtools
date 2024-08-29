@@ -14,7 +14,10 @@ class EggBillboardAttribute(EggAttribute):
     def __init__(self, billboard_type):
         self.billboard_type = billboard_type
         self.billboard_mode = name2id[billboard_type.lower()]
-        super().__init__(entry_type="Billboard", name="", contents=billboard_type)
+        super().__init__(entry_type = "Billboard", name = "", contents = billboard_type)
+
+    def get_billboard_types(self):
+        return name2id
 
     def _modify_polygon(self, egg_polygon, tref):
         pass

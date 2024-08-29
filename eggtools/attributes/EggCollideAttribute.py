@@ -101,13 +101,21 @@ class EggCollideAttribute(EggAttribute):
 
         super().__init__(entry_type="Collide", name=name, contents=csname + (' ' if flags else '') + ' '.join(flags))
 
+    @staticmethod
+    def get_collision_solids():
+        return cs2type
+
+    @staticmethod
+    def get_collision_flags():
+        return flags2type
+
     def _modify_polygon(self, egg_polygon, tref=None):
         # print(egg_polygon.hasColor())
         pass
 
     def _modify_node(self, egg_node):
         if self.target_nodes.check(egg_node.getName()) and hasattr(egg_node, "setCollideFlags"):
-            # We must aggregate all of the collision bits
+            # We must aggregate all the collision bits
             collisionFlag = 0
             for flag in self.flags:
                 collisionFlag |= flag

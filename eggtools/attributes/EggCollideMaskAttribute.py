@@ -17,6 +17,10 @@ class EggCollideMaskAttribute(EggAttribute):
         name = name2type[side][0]
         super().__init__(entry_type="Scalar", name=name, contents=self.value)
 
+    @staticmethod
+    def get_collide_masks():
+        return name2type
+
     def _modify_polygon(self, egg_polygon, tref=None):
         pass
 

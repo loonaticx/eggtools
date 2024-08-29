@@ -26,6 +26,10 @@ class EggDartAttribute(EggAttribute):
         super().__init__(entry_type="Dart", name="", contents=self.dart_type)
         self.dart_mode = name2id[dart_type.lower()]
 
+    @staticmethod
+    def get_dart_types():
+        return name2id
+
     def _modify_polygon(self, egg_polygon, tref):
         pass
 

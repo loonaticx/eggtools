@@ -14,12 +14,17 @@ from eggtools.attributes.EggExtFileAttribute import EggExtFile, EggExtFileAttrib
 
 
 def test_egg_attrs():
+    """
+    Tests instantiation of egg attributes but does not test their application
+    """
     for item in ([
         EggAlphaAttribute("Dual"),
         EggBackstageAttribute(),
         EggBillboardAttribute("axis"),
         EggBinAttribute("ground"),
-        EggCollideAttribute('none', 'none'),
+        EggCollideAttribute(csname = 'polygon', flags = [
+            name for name in EggCollideAttribute.get_collision_flags().keys()
+        ]),
         EggCollideMaskAttribute(value = 'from'),
         EggDCSAttribute("net"),
         EggDartAttribute("structured"),
