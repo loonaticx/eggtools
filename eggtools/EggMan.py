@@ -133,7 +133,8 @@ class EggMan(object):
                 logging.warning("Registering empty EggData!")
             if not ctx.filename:
                 # Todo: better handling for egg files with no filename
-                logging.warning("EggData entry registered with no filename (use setEggFilename!)")
+                # Setting this to debug instead of warning, it should be a warning but we always seem to catch this
+                logging.debug("EggData entry registered with no filename (use setEggFilename!)")
 
     def _register_egg_texture(self, ctx: EggContext, target_node: EggTexture) -> None:
         """
