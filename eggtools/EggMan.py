@@ -13,7 +13,8 @@ from __future__ import annotations
 import copy
 import logging
 from enum import Enum
-from typing import Set
+from typing import Set, Union
+from typing import Optional
 
 from ordered_set import OrderedSet
 from panda3d.core import Filename
@@ -89,7 +90,7 @@ class EggMan(object):
 
     # region
 
-    def register_eggs(self, egg_filepaths: list[Filename | str]) -> None:
+    def register_eggs(self, egg_filepaths: list[Union[Filename, str]]) -> None:
         """
         Register Egg entries with EggMan through filepaths.
         """
@@ -105,7 +106,7 @@ class EggMan(object):
             egg_data.read(fp)
             self.register_egg_data([egg_data])
 
-    def register_egg_data(self, egg_datas: list[EggData | EggDataContext]) -> None:
+    def register_egg_data(self, egg_datas: list[Union[EggData, EggDataContext]]) -> None:
         """
         Registers supplemented egg data into EggMan.
         """
@@ -144,7 +145,7 @@ class EggMan(object):
             uvAttr = EggUVNameAttribute(uvName)
             ctx.egg_attributes.add(uvAttr)
 
-    def _traverse_egg(self, egg: EggData | EggGroup, ctx: EggContext) -> None:
+    def _traverse_egg(self, egg: Union[EggData, EggGroup], ctx: EggContext) -> None:
         """
         Traverses down an egg tree and records data mapped to the ctx key.
 
@@ -208,7 +209,8 @@ class EggMan(object):
     """
 
     # region
-    def merge_eggs(self, destination_egg: EggDataContext, target_eggs: list[EggDataContext] | EggDataContext) -> None:
+    def merge_eggs(self, destination_egg: EggDataContext,
+                   target_eggs: Union[list[EggDataContext], EggDataContext]) -> None:
         """
         Source egg(s) will be removed from egg datas and cannot be searched for anymore.
 
@@ -668,7 +670,7 @@ class EggMan(object):
     # region
 
     @verify_integrity
-    def get_point_data(self, egg_data, egg_node) -> OrderedSet[PointData] | None:
+    def get_point_data(self, egg_data, egg_node) -> Optional[PointData]:
         """
         [
             [NodeID, NodeTex]
@@ -693,7 +695,8 @@ class EggMan(object):
     """
 
     # region
-    def get_all_egg_filenames(self, prepend_dir=".", as_filename_object: bool = False) -> list[Filename] | list[str]:
+    def get_all_egg_filenames(self, prepend_dir=".", as_filename_object: bool = False) -> \
+            Union[list[Filename], list[str]]:
         filenames = list()
         for egg_data in self.egg_datas.keys():
             if as_filename_object:
@@ -727,7 +730,7 @@ class EggMan(object):
 
     # region
 
-    def mark_dirty(self, egg: EggData | EggContext) -> None:
+    def mark_dirty(self, egg: Union[EggData, EggContext]) -> None:
         if isinstance(egg, EggContext):
             egg.dirty = True
         else:

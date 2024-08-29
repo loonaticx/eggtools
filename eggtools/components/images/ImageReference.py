@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional, Union
 
 from panda3d.core import Filename
 
@@ -8,7 +8,7 @@ class ImageReference:
     This could be the location of an image
     """
 
-    def __init__(self, name: str, filename: str | Filename, aux_data: Any | None = None):
+    def __init__(self, name: str, filename: Union[str, Filename], aux_data: Optional[Any] = None):
         """
         :param str name: Relative name of the texture, not correlated to its filename
         """

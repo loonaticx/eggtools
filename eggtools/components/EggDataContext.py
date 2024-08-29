@@ -1,7 +1,7 @@
 from panda3d.core import DSearchPath, Filename
 from panda3d.egg import EggData
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 if TYPE_CHECKING:
     from eggtools.components import EggContext
@@ -49,7 +49,7 @@ class EggDataContext(EggData):
     def __init__(self, *args, **kwargs):
         super().__init__(EggData(*args, **kwargs))
         # Currently dont know a good reason why you should pass context in kwargs with how EggMan handles them.
-        self.context: EggContext | None = kwargs.get("context")
+        self.context: Optional[EggContext] = kwargs.get("context")
 
     def read(self, *args, **kwargs):
         super().read(*args, **kwargs)

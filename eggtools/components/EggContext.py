@@ -4,7 +4,7 @@ from panda3d.egg import EggTextureCollection, EggTexture, EggNode, EggGroup
 
 from eggtools.components.EggDataContext import EggDataContext
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Optional
 
 if TYPE_CHECKING:
     from eggtools.components.points.PointData import PointData
@@ -45,7 +45,7 @@ class EggContext:
 
     def __init__(self, filename: Filename):
         # Don't completely rely on this being the source EggData object. This is meant for synchronization uses.
-        self.egg_data_loopback: EggDataContext | None = None
+        self.egg_data_loopback: Optional[EggDataContext] = None
 
         # If egg has been altered in memory, it is considered dirty and subject to overwrite what's on the disk.
         self.dirty = False
@@ -54,7 +54,7 @@ class EggContext:
         self.egg_texture_collection = EggTextureCollection()
         self.egg_materials = OrderedSet()
         self.egg_attributes = OrderedSet()
-        self.egg_timestamp_old: int | bool = False
+        self.egg_timestamp_old: Union[int, bool] = False
         self.egg_save_timestamp = False
         self.egg_ext_file_refs = OrderedSet()
         self.egg_groups = OrderedSet()
@@ -94,7 +94,7 @@ class EggContext:
         texcollection.findUsedTextures(egg_node)
         return texcollection.getTextures()
 
-    def points_by_textures(self, egg_node: EggNode) -> dict["EggTexture | PointData"]:
+    def points_by_textures(self, egg_node: EggNode) -> dict[Union["EggTexture", "PointData"]]:
         """
         :returns: a list of PointDatas (EggVertexes and UV coordinates) for each EggTexture on the EggNode.
 

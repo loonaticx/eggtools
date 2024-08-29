@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from PIL.Image import Image
 from panda3d.core import StringStream, LPoint2d, Filename
@@ -62,7 +63,7 @@ class Depalettizer:
                           image_kwargs: dict,
                           write_to_disk: bool = True,
                           fill_type: ImageFill.FillType = None,
-                          ) -> Image | None:
+                          ) -> Optional[Image]:
         """
         :param PointData point_data: Includes the texture and uvs needed to generate a bbox
         """

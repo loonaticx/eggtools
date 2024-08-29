@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Optional, Union
 
 from panda3d.core import Filename
 
@@ -36,7 +37,7 @@ class EggNameResolver:
         for sp in path:
             self._search_paths.append(sp)
 
-    def try_different_names(self, filename: str, prefix_type: str = "t") -> str | None:
+    def try_different_names(self, filename: str, prefix_type: str = "t") -> Optional[str]:
         # Replace: toontown_background --> tt_t_background
         new_filename = filename.replace(f"{self.old_prefix}_", f"{self.new_prefix}_{prefix_type}_")
         if not new_filename.startswith(f"{self.new_prefix}_{prefix_type}_"):
@@ -51,7 +52,7 @@ class EggNameResolver:
         # can't find any hits, just return em back
         return filename
 
-    def try_searching_paths(self, filename: str) -> Filename | None:
+    def try_searching_paths(self, filename: str) -> Optional[Filename]:
         for filepath in self.search_paths:
             # We have to convert back into Filename because os.path can't find files with like
             # /f/path/to/assets\mytexture.png

@@ -1,3 +1,5 @@
+from typing import Optional, Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 from panda3d.egg import EggNode
@@ -24,8 +26,8 @@ class MatplotPlotter:
         plt.title(title)
         plt.show()
 
-    def plot_eggnode_textures(self, ctx: EggContext, egg_nodes: list[EggNode] | EggNode, plot_kwargs=None, i: int = 0,
-                              sortby: PointEnum | None = None):
+    def plot_eggnode_textures(self, ctx: EggContext, egg_nodes: Union[list[EggNode], EggNode], plot_kwargs=None,
+                              i: int = 0, sortby: Optional[PointEnum] = None):
         if plot_kwargs is None:
             plot_kwargs = {}
         if not isinstance(egg_nodes, list):

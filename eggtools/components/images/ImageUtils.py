@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 from PIL import Image, ImageChops, ImageOps
 from panda3d.core import Filename, Vec2
@@ -9,7 +10,8 @@ from panda3d.egg import EggTexture
 from eggtools.components.images.ImageReference import ImageReference
 
 
-def crop_image_to_box(texture: EggTexture | ImageReference, bounding_box: Vec2, repeat_image: bool = True) -> Image:
+def crop_image_to_box(texture: Union[EggTexture, ImageReference], bounding_box: Vec2,
+                      repeat_image: bool = True) -> Image:
     """
     :param bool repeat_image: If the resultant image is larger than the cropped image, just keep repeating/tiling it.
     This is useful with meshes that have repeating textures.

@@ -1,3 +1,5 @@
+from typing import Optional, Union
+
 from PIL import Image
 
 from eggtools.components.images import ImageUtils
@@ -18,7 +20,7 @@ class ImageMarginer:
             fill_type = FillTypes.get(fill_type, UnknownFill)()
         return fill_type
 
-    def __init__(self, fill_type: FillMode | FillType | None = SolidFill):
+    def __init__(self, fill_type: Optional[Union[FillMode, FillType, None]] = SolidFill):
         self.fill_type = self._get_fill_type(fill_type)
 
     @staticmethod
@@ -50,7 +52,7 @@ class ImageMarginer:
 
         return new_image
 
-    def create_margined_image(self, source_image: Image, fill_type: FillMode | FillType | None,
+    def create_margined_image(self, source_image: Image, fill_type: Optional[Union[FillMode, FillType, None]],
                               margin_x=None,  margin_y=None) -> Image:
         if not margin_x:
             margin_x = self.margin_x
