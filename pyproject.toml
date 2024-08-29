@@ -3,7 +3,12 @@ name = "panda3d-eggtools"
 version = "2.3.0"
 description = "Library of utilities catered towards managing Panda3D egg files."
 
-authors = ["Loonatic, Corporate Clash"]
+authors = ["Corporate Clash"]
+maintainers = ["Loonatic"]
+repository = "https://github.com/loonaticx/eggtools"
+keywords = [
+    "panda3d"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
@@ -11,3 +16,12 @@ python = ">=3.8,<4.0"
 [tool.poetry.group.dev.dependencies]
 python = ">=3.8,<4.0"
 panda3d = "^1.10.14"
+ordered_set = "^4.1.0"
+
+[tool.poetry.group.image_processing.dependencies]
+numpy = "1.23.5"
+Pillow = "10.4.0"
+opencv-python = "*"
+
+[tool.poetry.extras]
+plotting = ["matplotlib"]
