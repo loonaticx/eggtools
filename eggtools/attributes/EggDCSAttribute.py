@@ -31,6 +31,10 @@ class EggDCSAttribute(EggAttribute):
         super().__init__(entry_type="DCS", name="", contents=self.dcs_type)
         self.dcs_mode = name2id[dcs_type.lower()]
 
+    @staticmethod
+    def get_dcs_types():
+        return name2id
+
     def _modify_polygon(self, egg_polygon, tref):
         pass
 

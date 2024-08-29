@@ -25,3 +25,10 @@ buildtools/rules/test.txa
 *.bam
 *.egg
 /env
+
+# Generated test cases
+*_crop*.png
+*_crop*.egg
+
+# Sandbox environment
+sandbox/

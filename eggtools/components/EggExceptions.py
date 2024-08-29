@@ -17,6 +17,7 @@ class EggAccessViolation(EggException):
     """
     Used when improperly accessing EggMan's egg data contents.
     """
+
     def __str__(self):
         return f"{self.errorMessage}" \
                f"Filename = {self.filename}"

@@ -1,1 +1,6 @@
-panda3d
+matplotlib==3.7.2
+numpy==1.23.5
+ordered_set==4.1.0
+panda3d==1.10.14
+Pillow==10.4.0
+opencv-python

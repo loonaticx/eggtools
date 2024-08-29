@@ -37,6 +37,10 @@ class EggAlphaAttribute(EggAttribute):
         super().__init__(entry_type="Scalar", name="alpha", contents=self.alpha_name)
         self.alpha_mode = name2id[alpha_name.lower()]
 
+    @staticmethod
+    def get_attributes():
+        return name2id
+
     def _modify_polygon(self, egg_polygon, tref):
         if not self.target_nodes:
             target_nodes = DualConfig

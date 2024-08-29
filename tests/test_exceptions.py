@@ -18,4 +18,7 @@ eggdata = EggData()
 eggdata.read(test_egg)
 
 # Try to read an EggData that isn't initialized with our EggMan. This should cause an exception.
-eggman.apply_attributes(eggdata)
+try:
+    eggman.apply_attributes(eggdata)
+except Exception as e:
+    print(e)

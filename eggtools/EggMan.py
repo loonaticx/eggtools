@@ -13,11 +13,12 @@ from __future__ import annotations
 import copy
 import logging
 from enum import Enum
-from typing import Set
+from typing import Set, Union, Dict, List
+from typing import Optional
 
+from ordered_set import OrderedSet
 from panda3d.core import Filename
 from panda3d.egg import *
-from dataclasses import dataclass, field
 import os, sys
 from pathlib import Path
 
@@ -27,8 +28,11 @@ from eggtools.AttributeDefs import DefinedAttributes, ObjectTypeDefs
 from eggtools.attributes.EggAlphaAttribute import EggAlphaAttribute
 from eggtools.attributes.EggAttribute import EggAttribute
 from eggtools.attributes.EggUVNameAttribute import EggUVNameAttribute
+from eggtools.components.points.PointData import PointData
 from eggtools.config.EggVariableConfig import GAMEASSETS_MAPS_PATH, GAMEASSETS_DIR
 from eggtools.utils.EggNameResolver import EggNameResolver
+from eggtools.components.EggContext import EggContext
+from eggtools.components.EggDataContext import EggDataContext
 
 BASE_PATH = GAMEASSETS_MAPS_PATH
 
@@ -37,30 +41,6 @@ class EggGroupRenameType(str, Enum):
     RenamePrefixes = "rename_prefix"
     RenameSuffixes = "rename_suffix"
     ReplaceAll = "replace_all"
-
-
-@dataclass
-class EggContext:
-    """
-    Holds iterable attributes for an EggData object
-    """
-
-    # Holds the filename of the egg
-    filename: Filename
-
-    # If egg has been altered in memory, it is considered dirty and subject to overwrite what's on the disk.
-    dirty: bool = field(default_factory=lambda: False)
-
-    egg_textures: Set = field(default_factory=lambda: set())
-    egg_texture_collection: EggTextureCollection = field(default_factory=lambda: EggTextureCollection())
-    egg_materials: Set = field(default_factory=lambda: set())
-    egg_attributes: Set = field(default_factory=lambda: set())
-    egg_timestamp_old: int = field(default_factory=lambda: False)
-    egg_save_timestamp: bool = field(default_factory=lambda: False)
-    egg_ext_file_refs: Set = field(default_factory=lambda: set())
-
-    def __hash__(self):
-        return hash(str(self))
 
 
 class EggMan(object):
@@ -74,6 +54,10 @@ class EggMan(object):
         return out
 
     def verify_integrity(func):
+        """
+        Watcher to ensure that no invalid egg inputs are given
+        """
+
         def verify(self, egg_base: EggData, *args):
             if not isinstance(egg_base, EggData):
                 raise EggImproperArgType(egg_base, EggData)
@@ -82,14 +66,15 @@ class EggMan(object):
                 raise EggAccessViolation(egg_base, "Attempted to utilize non-existent EggData entry!")
 
             return func(self, egg_base, *args)
+
         return verify
 
-    def __init__(self, egg_filepaths: list, search_paths: list[str] = None,
-                 loglevel: logging = logging.CRITICAL) -> None:
-        logging.basicConfig(level=loglevel)
+    def __init__(self, egg_filepaths: list, search_paths: List[str] = None,
+                 loglevel: logging = logging.WARNING) -> None:
+        logging.basicConfig(level = loglevel)
         if not search_paths:
             search_paths = [BASE_PATH]
-        self.NameResolver = EggNameResolver(search_paths, loglevel=loglevel)
+        self.NameResolver = EggNameResolver(search_paths, loglevel = loglevel)
         self.search_paths = self.NameResolver.search_paths
 
         # use egg_datas to work with registered eggs
@@ -105,7 +90,10 @@ class EggMan(object):
 
     # region
 
-    def register_eggs(self, egg_filepaths: list[Filename | str]) -> None:
+    def register_eggs(self, egg_filepaths: List[Union[Filename, str]]) -> None:
+        """
+        Register Egg entries with EggMan through filepaths.
+        """
         if not egg_filepaths:
             return
         for fp in egg_filepaths:
@@ -114,25 +102,51 @@ class EggMan(object):
             if fp.getExtension() not in ("egg", "pz"):  # pz: pzip
                 print(f"{fp.getBasenameWoExtension()} does not have egg extension, not registering {fp.getFullpath()}")
                 continue
-            egg_data = EggData()
+            egg_data = EggDataContext()
             egg_data.read(fp)
-            self.egg_datas[egg_data] = EggContext(fp)
+            self.register_egg_data([egg_data])
+
+    def register_egg_data(self, egg_datas: List[Union[EggData, EggDataContext]]) -> None:
+        """
+        Registers supplemented egg data into EggMan.
+        """
+        if not isinstance(egg_datas, list):
+            egg_datas = [egg_datas]
+
+        for egg_data in egg_datas:
+            if self.egg_datas.get(egg_data):
+                raise EggAccessViolation(egg_data, "Attempted to register the same EggData more than once!")
+            egg_filepath = egg_data.getEggFilename()
+
+            self.egg_datas[egg_data] = EggContext(egg_filepath)
             ctx = self.egg_datas[egg_data]
+
+            if isinstance(egg_data, EggDataContext):
+                egg_data.context = ctx
+
+            # Populates this EggTextureCollection. Note that you will need to ensure that the texture collection
+            # is recalled if any textures are added/deleted.
             ctx.egg_texture_collection.findUsedTextures(egg_data)
             self._traverse_egg(egg_data, ctx)
-            self._egg_name_2_egg_data[fp.getBasename()] = egg_data
+            self._egg_name_2_egg_data[egg_filepath.getBasename()] = egg_data
+            if not egg_data.getChildren():
+                logging.warning("Registering empty EggData!")
+            if not ctx.filename:
+                # Todo: better handling for egg files with no filename
+                # Setting this to debug instead of warning, it should be a warning but we always seem to catch this
+                logging.debug("EggData entry registered with no filename (use setEggFilename!)")
 
     def _register_egg_texture(self, ctx: EggContext, target_node: EggTexture) -> None:
         """
         Register an egg texture with the given EggContext. This is used when traversing down the egg.
         """
-        ctx.egg_textures.add(target_node)
+        ctx.add_collect_texture(target_node)
         uvName = target_node.getUvName()
         if uvName:
             uvAttr = EggUVNameAttribute(uvName)
             ctx.egg_attributes.add(uvAttr)
 
-    def _traverse_egg(self, egg: EggData | EggGroup, ctx: EggContext) -> None:
+    def _traverse_egg(self, egg: Union[EggData, EggGroup], ctx: EggContext) -> None:
         """
         Traverses down an egg tree and records data mapped to the ctx key.
 
@@ -144,25 +158,60 @@ class EggMan(object):
             if isinstance(child, EggGroup):
                 # print(f"ObjectTypes for {child.getName()} - {child.getObjectTypes()}")
                 self._replace_object_types(ctx, child)
+                ctx.egg_groups.add(child)
                 self._traverse_egg(child, ctx)
+
             # <Material> { ... }
             if isinstance(child, EggMaterial):
                 ctx.egg_materials.add(child)
+
             # <Texture> { blah.png }
             if isinstance(child, EggTexture):
                 self._register_egg_texture(ctx, child)
+
             # <File> { filename.egg }
             if isinstance(child, EggExternalReference):
                 ctx.egg_ext_file_refs.add(child)
+
+            if isinstance(child, EggPolygon):
+                # { EggGroupName { { Polygon_TREFNAME : { "vertexID" : [ U, V ] } } }
+                # For now can we only use one tref for Polygon entries, even though having more is possible
+                polyTexture = child.getTexture()
+                # Even if the poly doesn't have a texture, we should still traverse it for now
+                # let's not discriminate..
+                # if not polyTexture:
+                #     continue
+                parent_node = child.getParent()
+
+                vertex_uvs = {}
+                # UV name attributes are handled separately since they are tangible
+                for egg_vertex in child.getVertices():
+                    u, v = [None, None]
+                    if egg_vertex.hasUv():
+                        u, v = egg_vertex.getUv()
+                    vertex_uvs[egg_vertex] = [u, v]
+
+                if not ctx.point_data.get(parent_node):
+                    ctx.point_data[parent_node] = OrderedSet()
+
+                # parent node should already have an entry.
+                ctx.point_data[parent_node].add(
+                    PointData(
+                        egg_filename = ctx.filename,
+                        egg_vertex_uvs = vertex_uvs,
+                        egg_texture = polyTexture
+                    )
+                )
 
     # endregion
 
     """
     EggData Management
     """
-    # region
 
-    def merge_eggs(self, destination_egg: EggData, target_eggs: list[EggData] | EggData) -> None:
+    # region
+    def merge_eggs(self, destination_egg: EggDataContext,
+                   target_eggs: Union[List[EggDataContext], EggDataContext]) -> None:
         """
         Source egg(s) will be removed from egg datas and cannot be searched for anymore.
 
@@ -180,33 +229,91 @@ class EggMan(object):
 
         self.mark_dirty(destination_egg)
 
+    @verify_integrity
+    def replace_eggdata(self, old_eggdata: EggDataContext, new_eggdata: EggDataContext):
+        """
+        Replaces a registered EggData entry with any unregistered EggData entry.
+        Note: EggContext may be stale from this!
+
+        :param new_eggdata: EggData that is currently *not* registered with EggMan yet.
+        """
+        """
+        # Use case:
+        newEggData = EggData()
+        newEggData.read(...)
+        # Example: Adding new data entries to the top of the egg file, rather than the bottom
+        newEggData.merge(oldEggData)
+        eggman.replace_eggdata(oldEggData, newEggData)
+        """
+        if old_eggdata is new_eggdata:
+            # This would already raise an exception, but let's give a bit more of a clear reason.
+            raise EggAccessViolation(new_eggdata, "Cannot replace EggData with itself!")
+
+        ctx_old = self.egg_datas[old_eggdata]
+
+        # Generate new EggData entry
+        self.register_egg_data(new_eggdata)
+
+        ctx_new = self.egg_datas[new_eggdata]
+        ctx_new.merge_replace(ctx_old)
+        ctx_new.egg_texture_collection.removeUnusedTextures(new_eggdata)
+
+        # Swap locations of the old and new entry to preserve the index order.
+        egg_indexes = list(self.egg_datas)
+        old_eggdata_index = egg_indexes.index(old_eggdata)
+        new_eggdata_index = egg_indexes.index(new_eggdata)
+
+        eggdata = list(self.egg_datas.items())
+
+        # Move old eggdata to the back of the dict so that it doesn't affect anyone else
+        eggdata[old_eggdata_index], eggdata[new_eggdata_index] = eggdata[new_eggdata_index], eggdata[old_eggdata_index]
+
+        # Convert back to dict
+        self.egg_datas = dict(eggdata)
+
+        # Remove old egg from dict
+        del self._egg_name_2_egg_data[ctx_old.filename.getBasename()]
+        del self.egg_datas[old_eggdata]
+        ctx_old.destroy()
+        del ctx_old
+
     # endregion
+
     """
     Egg Group Management
     """
+
     # region
 
     def strip_all_group_prefix(self, prefixes, recurse):
         for egg_data in self.egg_datas.keys():
-            self.strip_group_prefix(egg_data, prefixes=prefixes, recurse=recurse)
+            self.strip_group_prefix(egg_data, prefixes = prefixes, recurse = recurse)
 
     def strip_group_prefix(self, egg: EggNode, prefixes, recurse):
         """
         wrapper for rename_group_nodes
         """
-        self.rename_group_nodes(egg, rename_type=EggGroupRenameType.RenamePrefixes, substrings=prefixes,
-                                recurse=recurse)
+        self.rename_group_nodes(
+            egg,
+            rename_type = EggGroupRenameType.RenamePrefixes,
+            substrings = prefixes,
+            recurse = recurse
+        )
 
     def strip_all_group_suffix(self, suffixes, recurse):
         for egg_data in self.egg_datas.keys():
-            self.strip_group_suffix(egg_data, suffixes=suffixes, recurse=recurse)
+            self.strip_group_suffix(egg_data, suffixes = suffixes, recurse = recurse)
 
     def strip_group_suffix(self, egg: EggNode, suffixes, recurse):
         """
         wrapper for rename_group_nodes
         """
-        self.rename_group_nodes(egg, rename_type=EggGroupRenameType.RenameSuffixes, substrings=suffixes,
-                                recurse=recurse)
+        self.rename_group_nodes(
+            egg,
+            rename_type = EggGroupRenameType.RenameSuffixes,
+            substrings = suffixes,
+            recurse = recurse
+        )
 
     def rename_all_group_nodes(self, rename_type: EggGroupRenameType, substrings: list, recurse=True):
         for egg_data in self.egg_datas.keys():
@@ -258,6 +365,7 @@ class EggMan(object):
                         traverse_egg(child, ctx)
 
         traverse_egg(egg, self.egg_datas[egg])
+
     # endregion
 
     """
@@ -266,7 +374,7 @@ class EggMan(object):
 
     # region
 
-    def apply_all_attributes(self, egg_attributes: dict[EggAttribute] = None) -> None:
+    def apply_all_attributes(self, egg_attributes: Dict[EggAttribute] = None) -> None:
         """
         By default, will clear up all the defined UV names if applicable
         """
@@ -274,7 +382,7 @@ class EggMan(object):
             self.apply_attributes(egg_data, egg_attributes)
 
     @verify_integrity
-    def apply_attributes(self, egg_base: EggData, egg_attributes: dict[EggAttribute] = None) -> None:
+    def apply_attributes(self, egg_base: EggData, egg_attributes: Dict[EggAttribute] = None) -> None:
         ctx = self.egg_datas.get(egg_base)
 
         if not egg_attributes:
@@ -304,7 +412,7 @@ class EggMan(object):
                 continue
             for attribute in object_type_def:
                 # Apply EggAttribute equivalents defined for this object type
-                attribute.apply(egg_base, ctx, node_entries=[target_node.getName()])
+                attribute.apply(egg_base, ctx, node_entries = [target_node.getName()])
             target_node.removeObjectType(object_type_name)
             ctx.dirty = True
 
@@ -448,7 +556,7 @@ class EggMan(object):
                 continue
             temp_tex = EggTexture(egg_texture)
             temp_tex.assign(self.rebase_egg_texture(test_tref, filename, egg_tex))
-            self.do_tex_replace(egg, new_tex=temp_tex, old_tex=egg_tex)
+            self.do_tex_replace(egg, new_tex = temp_tex, old_tex = egg_tex)
             egg_tex.setFilename(filename)
         self.rename_trefs(egg)
 
@@ -503,7 +611,7 @@ class EggMan(object):
         for egg_data in self.egg_datas.keys():
             self.rename_trefs(egg_data)
 
-    def get_current_textures(self, egg: EggData) -> list[EggTexture]:
+    def get_current_textures(self, egg: EggData) -> List[EggTexture]:
         # workaround attempt
         ctx = self.egg_datas[egg]
         egg_textures = []
@@ -511,12 +619,12 @@ class EggMan(object):
             egg_textures.append(texture)
         return egg_textures
 
-    def get_texture_filepaths(self, egg: EggData) -> list[Filename]:
+    def get_texture_filepaths(self, egg: EggData) -> List[Filename]:
         ctx = self.egg_datas[egg]
         # test = list(lambda texname: texname.getFilename() for texname in ctx.egg_textures)
         return [texname.getFilename() for texname in ctx.egg_textures]
 
-    def get_texture_basenames(self, egg: EggData, include_extension: bool = True) -> list[str]:
+    def get_texture_basenames(self, egg: EggData, include_extension: bool = True) -> List[str]:
         ctx = self.egg_datas[egg]
         # test = list(lambda texname: texname.getFilename() for texname in ctx.egg_textures)
         if include_extension:
@@ -532,11 +640,17 @@ class EggMan(object):
             if texture_name in egg_texture.getFilename().getBasename():
                 return egg_texture
 
+    def sort_trefs(self, egg: EggData = None, sortby: str = ""):
+        # TODO, make sortby enums, just have like
+        # { TCSort.TRefs: sortByTref }
+        pass
+
     # endregion
 
     """
     Texture Access Methods
     """
+
     # region
     def get_tex_info(self, egg_texture: EggTexture) -> str:
         """
@@ -551,11 +665,39 @@ class EggMan(object):
     # endregion
 
     """
+    Egg Vertex Management
+    """
+
+    # region
+
+    @verify_integrity
+    def get_point_data(self, egg_data, egg_node) -> Optional[OrderedSet[PointData]]:
+        """
+        [
+            [NodeID, NodeTex]
+            NodeID --> [ EggVertex: { u, v } ]
+            NodeTex --> EggTexture
+        ]
+        """
+        ctx: EggContext = self.egg_datas[egg_data]
+        point_data = ctx.point_data.get(egg_node)
+        if point_data:
+            return point_data
+        for point_node in ctx.point_data.keys():
+            if egg_node.getName() == point_node.getName():
+                point_data = ctx.point_data[point_node]
+                return point_data
+        return None
+
+    # endregion
+
+    """
     Egg External File Methods
     """
 
     # region
-    def get_all_egg_filenames(self, prepend_dir=".", as_filename_object: bool = False) -> list[Filename] | list[str]:
+    def get_all_egg_filenames(self, prepend_dir=".", as_filename_object: bool = False) -> \
+            Union[List[Filename], List[str]]:
         filenames = list()
         for egg_data in self.egg_datas.keys():
             if as_filename_object:
@@ -586,15 +728,33 @@ class EggMan(object):
     """
     EggMan Helper Methods
     """
+
     # region
 
-    def mark_dirty(self, egg: EggData | EggContext) -> None:
+    def mark_dirty(self, egg: Union[EggData, EggContext]) -> None:
         if isinstance(egg, EggContext):
             egg.dirty = True
         else:
             self.egg_datas[egg].dirty = True
 
-    def resolve_egg_textures(self, egg: EggData, want_auto_resolve: bool = True, try_names: bool = True) -> None:
+    def resolve_egg_textures(self, egg: EggData, want_auto_resolve: bool = True, try_names: bool = True,
+                             try_absolute=False) -> None:
+        """
+        Attempts to resolve 'invalid' texture paths in the EggData.
+        If a file was successfully resolved, the EggTexture will be rebuilt to match the working file path.
+
+        :param bool want_auto_resolve: Attempts to automatically resolve the file by performing a series of checks.
+
+        :param bool try_names: Try resolving the EggTexture by searching for a different filename.
+            Ideal for circumstances where image files have altered names but are still relevant to the file.
+            Only effective if want_auto_resolve is True.
+
+        :param bool try_absolute: Allow a file to have an absolute file path if an entry can be found.
+            It is most effective for EggTextures that are meant to be short-lived and not retained during export.
+            Not recommended to use absolute file paths for general use.
+            Only effective if want_auto_resolve is True.
+        """
+
         def auto_resolve(tex_path: str):
             """
             :return: new filename for setFilename
@@ -602,6 +762,11 @@ class EggMan(object):
             tex_file = Path(tex_path).name
             if try_names:
                 tex_file = self.NameResolver.try_different_names(tex_file)
+            if try_absolute:
+                possible_path = self.NameResolver.try_searching_paths(tex_file)
+                if possible_path:
+                    self.mark_dirty(ctx)
+                    return possible_path
             for search_path in self.NameResolver.search_paths:
                 new_tex_file = Filename.fromOsSpecific(os.path.join(search_path, tex_file))
                 if not os.path.isfile(new_tex_file):
@@ -612,6 +777,7 @@ class EggMan(object):
                 ).replace(os.sep, '/')
                 logging.debug(f"new tex path--> {tex_path} ({search_path}")
                 self.mark_dirty(ctx)
+                return tex_path
             return tex_path
 
         ctx = self.egg_datas[egg]
@@ -628,12 +794,10 @@ class EggMan(object):
                 rel_tex_path = ""
 
             ensure_test = rel_tex_path in str(egg_texture.getFilename())
-            # if not os.path.isfile(os.path.abspath(egg_texture.getFullpath())):
-            # EDGE CASE: what if file is using absolute filepath and checks the os.path.isfile check?
-            # we still don't want to use absolute filepaths.
 
+            # EDGE CASE: what if file is using absolute filepath and checks the os.path.isfile check?
+            # we still don't want to use absolute filepaths unless explicitly asked to do so.
             if not (os.path.isfile(fixed_path) and not os.path.isfile(os.path.abspath(egg_texture.getFullpath()))):
-                logging.warning(f"Warning, couldn't find texture {egg_texture.getFilename()}")
                 # if relative (good), this should give is an invalid path.
                 logging.debug(f"(path){os.path.abspath(egg_texture.getFullpath())}")
                 if want_auto_resolve:
@@ -643,8 +807,16 @@ class EggMan(object):
                     egg_texture.assign(
                         self.rebase_egg_texture(tref, auto_resolve(egg_texture.getFullpath()), egg_texture)
                     )
+                    if not os.path.isfile(egg_texture.getFilename()):
+                        logging.warning(
+                            f"Still couldn't find a texture after trying to auto resolve {egg_texture.getFilename()}"
+                        )
+                else:
+                    logging.warning(f"Couldn't find texture {egg_texture.getFilename()}")
+
             elif os.path.isfile(fixed_path) and not ensure_test:
-                print(f"ensure_test returned false")
+                # I haven't encountered this case yet
+                logging.warning(f"ensure_test returned false")
 
                 tref = repr(
                     ctx.egg_texture_collection.findFilename(egg_texture.getFilename())
@@ -657,6 +829,17 @@ class EggMan(object):
                 logging.debug(f"(filepath){os.path.abspath(egg_texture.getFullpath())}")
                 logging.debug(f"(fixedpath){fixed_path}")
 
+    @verify_integrity
+    def use_absolute_texpaths(self, egg: EggData):
+        ctx = self.egg_datas[egg]
+        for egg_texture in ctx.egg_textures:
+            filename = egg_texture.getFilename()
+            if not filename.isFullyQualified():
+                possible_path = self.NameResolver.try_searching_paths(filename.toOsSpecific())
+                if os.path.isfile(possible_path):
+                    self.repath_egg_texture(egg, egg_texture, possible_path)
+        pass
+
     def resolve_external_refs(self, egg: EggData):
         ctx = self.egg_datas[egg]
         for external_ref in ctx.egg_ext_file_refs:
@@ -667,6 +850,7 @@ class EggMan(object):
     """
     General Maintenance Methods
     """
+
     # region
 
     def remove_texture_duplicates(self, egg: EggData = None):
@@ -689,16 +873,19 @@ class EggMan(object):
         egg.setEggTimestamp(1)
         self.mark_dirty(egg)
 
-    def fix_broken_texpaths(self, egg: EggData = None) -> None:
+    def fix_broken_texpaths(self, egg: EggData = None, try_names: bool = True, try_absolute: bool = False) -> None:
         """
         Fixes broken texture paths but does not change the name of the TRef.
+
+        :param bool try_absolute: Allow a file to have an absolute file path if an entry can be found.
+            It is most effective for EggTextures that are meant to be short-lived and not retained during export.
         """
         if not egg:
             # ok we'll just fix all of the ones we've registered then
             for egg_data in self.egg_datas.keys():
-                self.resolve_egg_textures(egg_data)
+                self.resolve_egg_textures(egg_data, try_names = try_names, try_absolute = try_absolute)
         else:
-            self.resolve_egg_textures(egg)
+            self.resolve_egg_textures(egg, try_names = try_names, try_absolute = try_absolute)
 
     def remove_egg_materials(self, egg: EggData) -> None:
         ctx = self.egg_datas[egg]
@@ -753,6 +940,7 @@ class EggMan(object):
                 child.setComment("")
                 self.mark_dirty(egg)
                 # < Comment> { dfsjkofjhksdf }
+
     # endregion
 
     """
@@ -768,7 +956,7 @@ class EggMan(object):
         up to the number defined in your Config file.
         """
         for egg_data in self.egg_datas.keys():
-            self.write_egg(egg_data, custom_suffix=custom_suffix, dryrun=dryrun)
+            self.write_egg(egg_data, custom_suffix = custom_suffix, dryrun = dryrun)
 
     def write_egg(self, egg, filename: Filename = None, custom_suffix="", dryrun=False):
         """
@@ -795,7 +983,7 @@ class EggMan(object):
         else:
             logging.debug(f"{egg.egg_filename} was not dirty, not writing anything")
 
-    def write_all_eggs_manually(self, custom_suffix=""):
+    def write_all_eggs_manually(self, custom_suffix="", dryrun=False):
         """
         Exports all of the Egg files in EggMan manually. This will guarantee that something does get exported.
         By default, floating point values will be truncated to .4f
@@ -803,9 +991,9 @@ class EggMan(object):
         # I don't think this is going to cause any visual dislocation issues. The precision comes from
         # a floating point error nonetheless. We are also talking about a 0.0000xxxxxx difference.
         for egg_data in self.egg_datas.keys():
-            self.write_egg_manually(egg_data, custom_suffix=custom_suffix)
+            self.write_egg_manually(egg_data, custom_suffix = custom_suffix, dryrun = dryrun)
 
-    def write_egg_manually(self, egg, filename="", custom_suffix="", ):
+    def write_egg_manually(self, egg, filename="", custom_suffix="", dryrun=False):
         """
         Don't know why this currently happens, but there are instances where trying to save the egg a la writeEgg
         doesn't work. This is the alternative manual approach, where we just write out a string.
@@ -817,17 +1005,20 @@ class EggMan(object):
         filename = Filename(filename.getFullpath() + custom_suffix)
         ctx = self.egg_datas[egg]
         if ctx.dirty:
-            # If we put uniquifyTRefs here, it will not generate .tref.png files.
-            ctx.egg_texture_collection.uniquifyTrefs()
-            if not ctx.egg_save_timestamp:
-                self.remove_timestamp(egg)
-            # We get a PermissionDenied error once in a while with models that are not scoped to the target env.
-            try:
-                with open(filename, "w") as egg_file:
-                    logging.info(f"trying to write {filename}")
-                    egg_file.write(str(egg))
-            except Exception as e:
-                print(f"Failed to save file ({e})")
+            if not dryrun:
+                # If we put uniquifyTRefs here, it will not generate .tref.png files.
+                ctx.egg_texture_collection.uniquifyTrefs()
+                if not ctx.egg_save_timestamp:
+                    self.remove_timestamp(egg)
+                # We get a PermissionDenied error once in a while with models that are not scoped to the target env.
+                try:
+                    with open(filename, "w") as egg_file:
+                        logging.info(f"trying to write {filename}")
+                        egg_file.write(str(egg))
+                except Exception as e:
+                    print(f"Failed to save file ({e})")
+            else:
+                print(egg)
         else:
             pass
             # logging.debug(f"not rewriting {filename}")
