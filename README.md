@@ -1,4 +1,4 @@
-# Toontown: Corporate Clash Egg Tools
+# Panda3D Egg Tools
 
 **eggtools** is a library that provides access to managing egg files through the use of EggMan.
 
@@ -10,7 +10,7 @@ It allows you to do bulk/individual modifications to a set of egg files,
 ### Standalone Package
 To install and use as a standalone package, you can run the following in your developer environment:
 ```
-pip install git+https://github.com/CorporateClash/eggtools
+pip install git+https://github.com/loonaticx/eggtools
 ```
 
 ### Development
@@ -22,7 +22,7 @@ For working directly with the codebase, you have the option to use a virtual env
 1. Clone this repository
 
 ```
-git clone https://github.com/CorporateClash/eggtools
+git clone https://github.com/loonaticx/eggtools
 cd eggtools
 ```
 
@@ -90,3 +90,8 @@ Removes UV names off a given egg file.
 ```
 python -m eggtools.scripts.UVNameRemover
 ```
+
+## Disclaimer
+
+Eggtools was initially provisioned by [Toontown: Corporate Clash](https://github.com/CorporateClash) and was made public 
+in April 2024. Ownership of this project was transferred to [Loonatic](https://github.com/loonaticx) in August 2024.
