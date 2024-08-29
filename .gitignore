@@ -29,3 +29,6 @@ buildtools/rules/test.txa
 # Generated test cases
 *_crop*.png
 *_crop*.egg
+
+# Sandbox environment
+sandbox/
