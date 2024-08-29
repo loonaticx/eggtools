@@ -4,6 +4,7 @@ from panda3d.core import *
 
 from eggtools.EggMan import EggMan
 from eggtools.components.EggContext import EggContext
+from eggtools.components.points.PointData import PointHelper
 
 if not os.path.isfile('tests/test_tiles.egg'):
     test_egg = Filename.fromOsSpecific('test_tiles.egg')
@@ -20,6 +21,8 @@ for node in ctx.egg_groups:
     ctx.points_by_textures(node)
 
     point_datas = eggman.get_point_data(egg_data, node)
+    unify_test = PointHelper.unify_point_datas(point_datas)
+
     if point_datas:
         print(f"++ {node.getName()} has {len(point_datas)} entries")
     else:

@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Optional
+
 from panda3d.core import Filename
 from panda3d.egg import EggTexture
 from . import PointUtils
@@ -81,13 +83,20 @@ class PointData:
 
 class PointHelper:
     @staticmethod
-    def unify_point_datas(point_datas) -> PointData:
+    def unify_point_datas(point_datas) -> Optional[PointData]:
         """
         Takes the vertex_uv properties of all the provided PointDatas and aggregates them into one
         """
         point_vertexes = dict()
+        if not point_datas:
+            return None
+
         for pd in point_datas:
-            point_vertexes = point_vertexes | pd.egg_vertex_uvs
+            # for python 3.8 compatibility
+            # https://peps.python.org/pep-0584/
+            # unsupported operand type(s) for |: 'dict' and 'dict'
+            # point_vertexes = point_vertexes | pd.egg_vertex_uvs
+            point_vertexes = {**point_vertexes, **pd.egg_vertex_uvs}
         point_filename = point_datas[0].egg_filename
         point_texture = point_datas[0].egg_texture
         return PointData(point_filename, point_vertexes, point_texture)

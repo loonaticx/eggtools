@@ -670,7 +670,7 @@ class EggMan(object):
     # region
 
     @verify_integrity
-    def get_point_data(self, egg_data, egg_node) -> Optional[PointData]:
+    def get_point_data(self, egg_data, egg_node) -> Optional[OrderedSet[PointData]]:
         """
         [
             [NodeID, NodeTex]
