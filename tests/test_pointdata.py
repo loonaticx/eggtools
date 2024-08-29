@@ -6,10 +6,10 @@ from eggtools.EggMan import EggMan
 from eggtools.components.EggContext import EggContext
 from eggtools.components.points.PointData import PointHelper
 
-if not os.path.isfile('tests/test_tiles.egg'):
-    test_egg = Filename.fromOsSpecific('test_tiles.egg')
+if not os.path.isfile('tests/models/test_grid_1.egg'):
+    test_egg = Filename.fromOsSpecific('models/test_grid_1.egg')
 else:
-    test_egg = Filename.fromOsSpecific(os.path.join(os.getcwd(), 'tests/test_tiles.egg'))
+    test_egg = Filename.fromOsSpecific(os.path.join(os.getcwd(), 'tests/models/test_grid_1.egg'))
 
 eggman = EggMan([test_egg])
 
