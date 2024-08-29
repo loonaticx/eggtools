@@ -41,7 +41,7 @@ class EggMaintenanceUtil:
         allTextures = self.rename_list
         for egg_obj in self.eggman.egg_datas.keys():
             eggctx = self.eggman.egg_datas[egg_obj]
-            for texbase in self.eggman.get_texture_basenames(egg_obj, include_extension=False):
+            for texbase in self.eggman.get_texture_basenames(egg_obj, include_extension = False):
                 for textureEntry in allTextures.keys():
                     newTexture = ""
                     if partial_replace and textureEntry in texbase:
@@ -58,7 +58,7 @@ class EggMaintenanceUtil:
                     if put_into_tex_folder:
                         os.makedirs(
                             os.path.join(Filename.toOsSpecific(Filename.fromOsSpecific(self.base_path)), "tex"),
-                            exist_ok=True
+                            exist_ok = True
                         )
                         subfolder = "tex"
                     else:
@@ -104,13 +104,13 @@ class EggMaintenanceUtil:
         subfolder = ""
         for egg_obj in self.eggman.egg_datas.keys():
             eggctx = self.eggman.egg_datas[egg_obj]
-            for texbase in self.eggman.get_texture_basenames(egg_obj, include_extension=False):
+            for texbase in self.eggman.get_texture_basenames(egg_obj, include_extension = False):
                 self.base_path = eggctx.filename.getDirname()
                 if put_into_tex_folder:
                     print(f"moving {eggctx.filename}")
                     os.makedirs(
                         os.path.join(Filename.toOsSpecific(Filename.fromOsSpecific(self.base_path)), "tex"),
-                        exist_ok=True
+                        exist_ok = True
                     )
                     subfolder = "tex/"
                 rebase_texture = f"{subfolder}{texbase}.png"
@@ -158,7 +158,7 @@ if __name__ == "__main__":
                 print(f"adding file {file}")
                 file_list.append(os.path.abspath(os.path.join(dirpath, file)))
 
-    eggmaint = EggMaintenanceUtil(file_list, base_path=target_path)
+    eggmaint = EggMaintenanceUtil(file_list, base_path = target_path)
 
 """
 Sample Implementation
@@ -177,8 +177,8 @@ if 0:
                 print(f"adding file {file}")
                 file_list.append(os.path.abspath(os.path.join(dirpath, file)))
 
-    eggmaint = EggMaintenanceUtil(file_list, base_path=target_path)
+    eggmaint = EggMaintenanceUtil(file_list, base_path = target_path)
     # Use put_into_tex_folder if we are operating on storing assets individually
-    eggmaint.perform_rename_operations(rename_texture_file=True, put_into_tex_folder=True, copy_only=False)
+    eggmaint.perform_rename_operations(rename_texture_file = True, put_into_tex_folder = True, copy_only = False)
     eggmaint.perform_texpath_fixes()
     eggmaint.perform_general_maintenance()
