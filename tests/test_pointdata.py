@@ -16,6 +16,9 @@ egg_data = eggman.get_egg_by_filename(test_egg)
 ctx: EggContext = eggman.egg_datas[egg_data]
 
 for node in ctx.egg_groups:
+    # to test this
+    ctx.points_by_textures(node)
+
     point_datas = eggman.get_point_data(egg_data, node)
     if point_datas:
         print(f"++ {node.getName()} has {len(point_datas)} entries")
