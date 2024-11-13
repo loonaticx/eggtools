@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Optional, Union
+from typing import Optional
 
 from panda3d.core import Filename
 
@@ -60,7 +60,7 @@ class EggNameResolver:
             if os.path.isfile(possible_path):
                 logging.info(f"found similar path name to {filename}: {possible_path}")
                 return possible_path
-        # can't find any hits, just return nothin
+        # can't find any hits, just return nothing
         return None
 
     # Todo: Search via md5 hash?

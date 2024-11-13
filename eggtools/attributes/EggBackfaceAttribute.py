@@ -12,7 +12,7 @@ class EggBackfaceAttribute(EggAttribute):
 
     def __init__(self, want_backface=True):
         self.backface = want_backface
-        super().__init__(entry_type="BFace", name='', contents=f"{self.backface}")
+        super().__init__(entry_type = "BFace", name = '', contents = f"{self.backface}")
 
     def _modify_polygon(self, egg_polygon, tref=None):
         pass

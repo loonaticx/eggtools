@@ -25,3 +25,24 @@ opencv-python = "*"
 
 [tool.poetry.extras]
 plotting = ["matplotlib"]
+[tool.ruff]
+extend-exclude = [
+    "tests/*",
+    "examples/*"
+]
+
+[tool.ruff.lint]
+ignore = [
+    # Ignore wildcard imports
+    "F405",
+    "F403"
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore imported but unused
+"eggtools/attributes/__init__.py" = [
+    "F401",
+]
+"eggtools/AttributeDefs.py" = [
+    "F401",
+]

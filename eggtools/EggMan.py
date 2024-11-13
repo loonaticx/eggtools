@@ -10,26 +10,23 @@ Allows you to do bulk/individual modifications to a set of egg files, including 
 """
 from __future__ import annotations
 
-import copy
 import logging
 from enum import Enum
-from typing import Set, Union, Dict, List
+from typing import Union, Dict, List
 from typing import Optional
 
 from ordered_set import OrderedSet
 from panda3d.core import Filename
 from panda3d.egg import *
-import os, sys
+import os
 from pathlib import Path
 
 from eggtools.components.EggExceptions import EggAccessViolation, EggImproperArgType
-from eggtools.EggManConfig import DecalConfig, DualConfig, NodeNameConfig
 from eggtools.AttributeDefs import DefinedAttributes, ObjectTypeDefs
-from eggtools.attributes.EggAlphaAttribute import EggAlphaAttribute
 from eggtools.attributes.EggAttribute import EggAttribute
 from eggtools.attributes.EggUVNameAttribute import EggUVNameAttribute
 from eggtools.components.points.PointData import PointData
-from eggtools.config.EggVariableConfig import GAMEASSETS_MAPS_PATH, GAMEASSETS_DIR
+from eggtools.config.EggVariableConfig import GAMEASSETS_MAPS_PATH
 from eggtools.utils.EggNameResolver import EggNameResolver
 from eggtools.components.EggContext import EggContext
 from eggtools.components.EggDataContext import EggDataContext
@@ -816,7 +813,7 @@ class EggMan(object):
 
             elif os.path.isfile(fixed_path) and not ensure_test:
                 # I haven't encountered this case yet
-                logging.warning(f"ensure_test returned false")
+                logging.warning("ensure_test returned false")
 
                 tref = repr(
                     ctx.egg_texture_collection.findFilename(egg_texture.getFilename())

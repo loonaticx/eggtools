@@ -8,7 +8,7 @@ This will normally be used on scale references and other modeling tools.
 """
 
 from eggtools.attributes.EggAttribute import EggAttribute
-from eggtools.EggManConfig import BackstageConfig, NodeNameConfig
+from eggtools.EggManConfig import BackstageConfig
 
 
 class EggBackstageAttribute(EggAttribute):
