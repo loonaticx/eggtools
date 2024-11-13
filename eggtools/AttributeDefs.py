@@ -13,10 +13,13 @@ from eggtools.attributes.EggCollideMaskAttribute import EggCollideMask
 from eggtools.attributes.EggDCSAttribute import EggDCS
 from eggtools.attributes.EggDartAttribute import EggDart
 from eggtools.attributes.EggDecalAttribute import EggDecalAttribute, EggDecal
+from eggtools.attributes.EggIndexAttribute import EggIndex
 from eggtools.attributes.EggModelAttribute import EggModel, EggModelAttribute
 from eggtools.attributes.EggSequenceAttribute import EggSequence
 from eggtools.attributes.EggTagAttribute import EggTag
 from eggtools.attributes.EggExtFileAttribute import EggExtFile
+from eggtools.attributes.EggPortalAttribute import EggPortal
+from eggtools.attributes.EggPolylightAttribute import EggPolylight
 
 
 @dataclass
@@ -275,6 +278,16 @@ ObjectTypeDefs = {
     # ],
 
     # Misc
+    "indexed": [
+        EggIndex()
+    ],
+    "portal": [
+        EggPortal()
+    ],
+    "polylight": [
+        EggPolylight()
+    ],
+
     "none": [],
 
 }
