@@ -24,7 +24,7 @@ from eggtools.attributes.EggPolylightAttribute import EggPolylight
 
 @dataclass
 class _DefinedAttributes:
-    DefinedAttributes: dict = field(default_factory=lambda: "")
+    DefinedAttributes: dict = field(default_factory = lambda: "")
 
     def register_attribute(self, attrname, attrvalue):
         self.DefinedAttributes[attrname] = attrvalue
@@ -175,6 +175,8 @@ ObjectTypeDefs = {
         EggCollideMask(0x02),
         EggCollide('polyset', ['descend', 'level']),
     ],
+    # dupefloor means to duplicate the geometry first so that the same polygons serve both
+    # as visible geometry and as collision polygons.
     "dupefloor": [
         EggCollideMask(0x02),
         EggCollide('polyset', ['keep', 'descend', 'level']),
@@ -233,6 +235,18 @@ ObjectTypeDefs = {
         EggCollideMask(0x01),
         EggCollide('Tube', ['descend']),
     ],
+    # "bubble" puts an invisible bubble around an object, but does not otherwise remove the geometry.
+    "bubble": [
+        EggCollide('Sphere', ['keep', 'descend']),
+    ],
+
+    # "ghost" turns off the normal collide bit that is set on visible
+    # geometry by default, so that if you are using visible geometry for
+    # collisions, this particular geometry will not be part of those
+    # collisions--it is ghostlike.
+    "ghost": [
+        EggCollideMask(0x00),
+    ],
 
     # DCS
     "localdcs": [
@@ -270,12 +284,36 @@ ObjectTypeDefs = {
     "multisample": [
         EggAlpha('multisample')
     ],
+    "binary": [
+        EggAlpha("binary")
+    ],
+    "glass": [
+        EggAlpha("blend_no_occlude")
+    ],
+
 
     # Sequences
-    # TODO: add support for <Switch>, <Scalar> fps { blah }
-    # "seq2": [
-    #     EggSequence(2.0)
-    # ],
+    "seq2": [
+        EggSequence(2.0)
+    ],
+    "seq4": [
+        EggSequence(4.0)
+    ],
+    "seq6": [
+        EggSequence(6.0)
+    ],
+    "seq8": [
+        EggSequence(8.0)
+    ],
+    "seq10": [
+        EggSequence(10.0)
+    ],
+    "seq12": [
+        EggSequence(12.0)
+    ],
+    "seq24": [
+        EggSequence(24.0)
+    ],
 
     # Misc
     "indexed": [
