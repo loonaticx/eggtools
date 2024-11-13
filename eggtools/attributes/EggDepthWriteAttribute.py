@@ -49,7 +49,7 @@ class EggDepthWriteAttribute(EggAttribute):
                 hasattr(egg_node, "determineDepthWriteMode") and \
                 hasattr(egg_node, "setDepthWriteMode"):
             # First, check if we HAVE a render mode in the first place:
-            render_mode = egg_node.determineDepthWriteMode()  # type: EggRenderMode
+            render_mode: EggRenderMode = egg_node.determineDepthWriteMode()
 
             # If we do not have a render node, then we do not have a depth-write value.
             if not render_mode:

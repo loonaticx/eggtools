@@ -1,5 +1,5 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggGroup, EggPoint
+from panda3d.egg import EggGroup
 
 
 class EggPointLightAttribute(EggAttribute):

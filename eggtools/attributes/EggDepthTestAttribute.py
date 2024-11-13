@@ -42,7 +42,7 @@ class EggDepthTestAttribute(EggAttribute):
     def _modify_node(self, egg_node):
         if self.target_nodes.check(egg_node.getName()) and hasattr(egg_node, "getDepthTestMode"):
             # First, check if we HAVE a render mode in the first place:
-            render_mode = egg_node.getDepthTestMode()  # type: EggRenderMode
+            render_mode: EggRenderMode = egg_node.getDepthTestMode()
 
             # If we do not have a render node, then we do not have a depth-test value.
             if not render_mode:
