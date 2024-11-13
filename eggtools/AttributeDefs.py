@@ -4,6 +4,7 @@ Define custom attributes here
 
 from dataclasses import dataclass, field
 
+from eggtools.attributes import EggBlendMode
 from eggtools.attributes.EggAlphaAttribute import EggAlphaAttribute, EggAlpha
 from eggtools.attributes.EggBackstageAttribute import EggBackstage, EggBackstageAttribute
 from eggtools.attributes.EggBillboardAttribute import EggBillboard
@@ -291,6 +292,10 @@ ObjectTypeDefs = {
         EggAlpha("blend_no_occlude")
     ],
 
+    # Blend modes
+    "glow": [
+        EggBlendMode("add")
+    ],
 
     # Sequences
     "seq2": [

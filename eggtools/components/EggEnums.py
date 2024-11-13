@@ -24,6 +24,16 @@ class BillboardType(EggGroupEnum):
     PointWorldRelative = EG.BTPointWorldRelative
 
 
+class BlendMode(EggGroupEnum):
+    Unspecified = EG.BMUnspecified
+    NoType = EG.BMNone
+    Add = EG.BMAdd
+    Subtract = EG.BMSubtract
+    InvSubtract = EG.BMInvSubtract
+    Min = EG.BMMin
+    Max = EG.BMMax
+
+
 class CollisionSolidType(EggGroupEnum):
     NoType = EG.CSTNone
 
