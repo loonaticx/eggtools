@@ -1,16 +1,16 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggGroup
 
+from eggtools.components.EggEnums import DartType
 from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "none": EggGroup.DT_none,
-    "structured": EggGroup.DT_structured,
-    "sync": EggGroup.DT_sync,
-    "no_sync": EggGroup.DT_nosync,
-    "no-sync": EggGroup.DT_nosync,
-    "nosync": EggGroup.DT_nosync,
-    "default": EggGroup.DT_default,
+    "none": DartType.NoType,
+    "structured": DartType.Structured,
+    "sync": DartType.Sync,
+    "no_sync": DartType.NoSync,
+    "no-sync": DartType.NoSync,
+    "nosync": DartType.NoSync,
+    "default": DartType.Default,
 }
 
 

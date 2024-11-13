@@ -1,18 +1,17 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggGroup
 
+from eggtools.components.EggEnums import DynamicCoordinateType
 from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "unspecified": EggGroup.DC_unspecified,  # 0
-    "none": EggGroup.DC_none,  # 16
-    "local": EggGroup.DC_local,  # 32
-    "net": EggGroup.DC_net,  # 48
-    "no_touch": EggGroup.DC_no_touch,  # 64
-    "no-touch": EggGroup.DC_no_touch,  # 64
-    "notouch": EggGroup.DC_no_touch,  # 64
-    "default": EggGroup.DC_default,  # 80
-
+    "unspecified": DynamicCoordinateType.Unspecified,
+    "none": DynamicCoordinateType.NoType,
+    "local": DynamicCoordinateType.Local,
+    "net": DynamicCoordinateType.Net,
+    "no_touch": DynamicCoordinateType.NoTouch,
+    "no-touch": DynamicCoordinateType.NoTouch,
+    "notouch": DynamicCoordinateType.NoTouch,
+    "default": DynamicCoordinateType.Default,
 }
 
 

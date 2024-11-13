@@ -1,14 +1,13 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggGroup
-
+from eggtools.components.EggEnums import BillboardType
 from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "none": EggGroup.BT_none,
-    "axis": EggGroup.BT_axis,
-    "point": EggGroup.BT_point_camera_relative,
-    "point_camera_relative": EggGroup.BT_point_camera_relative,
-    "point_world_relative": EggGroup.BT_point_world_relative,
+    "none": BillboardType.NoType,
+    "axis": BillboardType.Axis,
+    "point": BillboardType.PointCameraRelative,
+    "point_camera_relative": BillboardType.PointCameraRelative,
+    "point_world_relative": BillboardType.PointWorldRelative,
 }
 
 

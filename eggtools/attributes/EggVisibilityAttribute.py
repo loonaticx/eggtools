@@ -1,14 +1,14 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggRenderMode
 
+from eggtools.components.EggEnums import RenderVisibilityMode
 from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "unspecified": EggRenderMode.VM_unspecified,
-    "off": EggRenderMode.VM_hidden,
-    "hidden": EggRenderMode.VM_hidden,
-    "on": EggRenderMode.VM_normal,
-    "normal": EggRenderMode.VM_normal,
+    "unspecified": RenderVisibilityMode.Unspecified,
+    "off": RenderVisibilityMode.Hidden,
+    "hidden": RenderVisibilityMode.Hidden,
+    "on": RenderVisibilityMode.Normal,
+    "normal": RenderVisibilityMode.Normal,
 
 }
 

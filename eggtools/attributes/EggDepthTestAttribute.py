@@ -1,12 +1,13 @@
 from eggtools.attributes.EggAttribute import EggAttribute
 from panda3d.egg import EggRenderMode
 
+from eggtools.components.EggEnums import DepthTestMode
 from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "unspecified": EggRenderMode.DTM_unspecified,  # 0
-    "off": EggRenderMode.DTM_off,  # 1
-    "on": EggRenderMode.DTM_on,  # 2
+    "unspecified": DepthTestMode.Unspecified,  # 0
+    "off": DepthTestMode.Off,  # 1
+    "on": DepthTestMode.On,  # 2
 }
 
 

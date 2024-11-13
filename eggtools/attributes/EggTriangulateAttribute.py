@@ -1,17 +1,17 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggGroupNode
 
+from eggtools.components.EggEnums import TriangulateType
 from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "polygon": EggGroupNode.T_polygon,
-    "convex": EggGroupNode.T_convex,
-    "composite": EggGroupNode.T_composite,
-    "recurse": EggGroupNode.T_recurse,
-    "flat": EggGroupNode.T_flat_shaded,
-    "flat-shaded": EggGroupNode.T_flat_shaded,
-    "flat_shaded": EggGroupNode.T_flat_shaded,
-    "flatshaded": EggGroupNode.T_flat_shaded
+    "polygon": TriangulateType.Polygon,
+    "convex": TriangulateType.Convex,
+    "composite": TriangulateType.Composite,
+    "recurse": TriangulateType.Recurse,
+    "flat": TriangulateType.FlatShaded,
+    "flat-shaded": TriangulateType.FlatShaded,
+    "flat_shaded": TriangulateType.FlatShaded,
+    "flatshaded": TriangulateType.FlatShaded
 }
 
 
