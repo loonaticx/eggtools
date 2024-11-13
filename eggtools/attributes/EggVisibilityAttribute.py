@@ -1,6 +1,8 @@
 from eggtools.attributes.EggAttribute import EggAttribute
 from panda3d.egg import EggRenderMode
 
+from eggtools.components.EggExceptions import EggAttributeInvalid
+
 name2id = {
     "unspecified": EggRenderMode.VM_unspecified,
     "off": EggRenderMode.VM_hidden,
@@ -11,6 +13,10 @@ name2id = {
 }
 
 
+def get_visibility_mode(visibility_name: str):
+    return name2id.get(visibility_name.lower(), None)
+
+
 class EggVisibilityAttribute(EggAttribute):
     def __init__(self, visibility_type, overwrite=False):
         if not isinstance(visibility_type, str):
@@ -18,11 +24,12 @@ class EggVisibilityAttribute(EggAttribute):
                 visibility_type = "on"
             else:
                 visibility_type = "off"
-
-        self.visibility_type = visibility_type
         self.overwrite = overwrite
-        super().__init__(entry_type="Scalar", name="visibility", contents=self.visibility_type)
-        self.visibility_type = name2id[visibility_type.lower()]
+        self.visibility_type = get_visibility_mode(visibility_type)
+        if self.visibility_type is None:
+            raise EggAttributeInvalid(self, visibility_type)
+
+        super().__init__(entry_type = "Scalar", name = "visibility", contents = self.visibility_type)
 
     @staticmethod
     def get_visibility_modes():

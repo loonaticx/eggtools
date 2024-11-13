@@ -2,6 +2,7 @@ from eggtools.attributes.EggAttribute import EggAttribute
 from panda3d.egg import EggRenderMode, EggVertexPool
 
 from eggtools.EggManConfig import DualConfig
+from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
     "unspecified": EggRenderMode.AM_unspecified,
@@ -26,6 +27,10 @@ name2id = {
 }
 
 
+def get_alpha_type(alpha_name: str):
+    return name2id.get(alpha_name.lower(), None)
+
+
 class EggAlphaAttribute(EggAttribute):
     def __init__(self, alpha_name, overwrite=False):
         """
@@ -34,8 +39,10 @@ class EggAlphaAttribute(EggAttribute):
         # <Scalar> alpha { dual }
         self.alpha_name = alpha_name
         self.overwrite = overwrite
-        super().__init__(entry_type="Scalar", name="alpha", contents=self.alpha_name)
-        self.alpha_mode = name2id[alpha_name.lower()]
+        self.alpha_mode = get_alpha_type(self.alpha_name)
+        if self.alpha_mode is None:
+            raise EggAttributeInvalid(self, self.alpha_name)
+        super().__init__(entry_type = "Scalar", name = "alpha", contents = self.alpha_name)
 
     @staticmethod
     def get_attributes():

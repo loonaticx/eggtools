@@ -1,6 +1,7 @@
 from panda3d.egg import EggGroup, EggVertexPool, EggPolygon
 
 from eggtools.attributes.EggAttribute import EggAttribute
+from eggtools.components.EggExceptions import EggAttributeInvalid
 
 # Collision Solids
 cs2type = {
@@ -42,6 +43,11 @@ cs2type = {
     'floor_mesh': EggGroup.CST_floor_mesh,
 }
 
+
+def get_collision_solid(cs_name: str):
+    return cs2type.get(cs_name.lower(), None)
+
+
 # Collision Flags
 
 flags2type = {
@@ -80,10 +86,16 @@ flags2type = {
 }
 
 
+def get_collision_flag(cf_name: str):
+    return flags2type.get(cf_name.lower(), None)
+
+
 class EggCollideAttribute(EggAttribute):
     def __init__(self, csname, flags, name='', preserve_uv_data=True):
         # <Collide> name { type [flags] }
-        self.cstype = cs2type[csname.lower()]
+        self.cstype = get_collision_solid(csname)
+        if self.cstype is None:
+            raise EggAttributeInvalid(self, csname)
         self.flags = list()
 
         # Make sure flags is not empty & it's a proper list.
@@ -95,11 +107,15 @@ class EggCollideAttribute(EggAttribute):
             flags.append('descend')
 
         for flag_entry in flags:
-            self.flags.append(flags2type[flag_entry.lower()])
+            flag_value = get_collision_flag(flag_entry)
+            if flag_value is None:
+                raise EggAttributeInvalid(self, flag_entry)
+            self.flags.append(flag_value)
 
         self.preserve_uv_data = preserve_uv_data
 
-        super().__init__(entry_type="Collide", name=name, contents=csname + (' ' if flags else '') + ' '.join(flags))
+        super().__init__(entry_type = "Collide", name = name,
+                         contents = csname + (' ' if flags else '') + ' '.join(flags))
 
     @staticmethod
     def get_collision_solids():
@@ -145,4 +161,4 @@ class EggCollideAttribute(EggAttribute):
 
 class EggCollide(EggCollideAttribute):
     def __init__(self, csname, flags, name='', preserve_uv_data=True):
-        super().__init__(csname, flags, name, preserve_uv_data=preserve_uv_data)
+        super().__init__(csname, flags, name, preserve_uv_data = preserve_uv_data)

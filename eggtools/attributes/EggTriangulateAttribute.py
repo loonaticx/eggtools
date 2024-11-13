@@ -1,6 +1,8 @@
 from eggtools.attributes.EggAttribute import EggAttribute
 from panda3d.egg import EggGroupNode
 
+from eggtools.components.EggExceptions import EggAttributeInvalid
+
 name2id = {
     "polygon": EggGroupNode.T_polygon,
     "convex": EggGroupNode.T_convex,
@@ -9,8 +11,12 @@ name2id = {
     "flat": EggGroupNode.T_flat_shaded,
     "flat-shaded": EggGroupNode.T_flat_shaded,
     "flat_shaded": EggGroupNode.T_flat_shaded,
-    "flatshaded": EggGroupNode.T_flat_shaded,
+    "flatshaded": EggGroupNode.T_flat_shaded
 }
+
+
+def get_triangulate_method(triangulate_name: str):
+    return name2id.get(triangulate_name.lower(), None)
 
 
 class EggTriangulateAttribute(EggAttribute):
@@ -24,8 +30,10 @@ class EggTriangulateAttribute(EggAttribute):
 
     def __init__(self, flag):
         # Not a real attribute
+        self.flag = get_triangulate_method(flag)
+        if self.flag is None:
+            raise EggAttributeInvalid(self, flag)
         super().__init__("Modifier", "TriangulatePolygons", flag)
-        self.flag = name2id[flag.lower()]
 
     @staticmethod
     def get_triangulate_methods():

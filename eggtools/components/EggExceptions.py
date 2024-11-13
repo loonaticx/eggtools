@@ -3,7 +3,34 @@ class EggException(Exception):
         super().__init__(self)
 
 
-class EggImproperArgType(EggException):
+# region EggAttribute Exceptions
+
+class EggAttributeException(EggException):
+    def __init__(self):
+        super().__init__()
+
+
+class EggAttributeInvalid(EggAttributeException):
+    def __init__(self, attribute_cls, attribute_type):
+        super().__init__()
+        self.attribute_name = type(attribute_cls).__name__
+        self.attribute_type = attribute_type
+
+    def __str__(self):
+        return f"Invalid EggAttribute input for {self.attribute_name}: {self.attribute_type}."
+
+
+# endregion
+
+# region EggMan Exceptions
+
+class EggManException(EggException):
+
+    def __init__(self):
+        super().__init__()
+
+
+class EggImproperArgType(EggManException):
     def __str__(self):
         return f"Wrong usage of parameter. Expected {self.correct} but got {self.incorrect} instead."
 
@@ -13,7 +40,7 @@ class EggImproperArgType(EggException):
         self.correct = correct_type
 
 
-class EggAccessViolation(EggException):
+class EggAccessViolation(EggManException):
     """
     Used when improperly accessing EggMan's egg data contents.
     """
@@ -26,3 +53,5 @@ class EggAccessViolation(EggException):
         super().__init__()
         self.filename = egg_data.getEggFilename()
         self.errorMessage = errorMessage + "\n"
+
+# endregion

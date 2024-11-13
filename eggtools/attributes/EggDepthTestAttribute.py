@@ -1,11 +1,17 @@
 from eggtools.attributes.EggAttribute import EggAttribute
 from panda3d.egg import EggRenderMode
 
+from eggtools.components.EggExceptions import EggAttributeInvalid
+
 name2id = {
     "unspecified": EggRenderMode.DTM_unspecified,  # 0
     "off": EggRenderMode.DTM_off,  # 1
     "on": EggRenderMode.DTM_on,  # 2
 }
+
+
+def get_depth_test_mode(depth_test_name: str):
+    return name2id.get(depth_test_name.lower(), None)
 
 
 class EggDepthTestAttribute(EggAttribute):
@@ -16,8 +22,10 @@ class EggDepthTestAttribute(EggAttribute):
                 depth_type = "on"
             else:
                 depth_type = "off"
-        super().__init__(entry_type="Scalar", name="depth-test", contents=depth_type)
-        self.depth_type = name2id[depth_type.lower()]
+        self.depth_type = get_depth_test_mode(depth_type)
+        if self.depth_type is None:
+            raise EggAttributeInvalid(self, depth_type)
+        super().__init__(entry_type = "Scalar", name = "depth-test", contents = depth_type)
 
     def _modify_polygon(self, egg_polygon, tref=None):
         target_nodes = self.target_nodes
