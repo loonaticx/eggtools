@@ -41,6 +41,10 @@ egg_attributes = {
         "pCube1",
     ],
 
+    EggTag("WildKey", "WildValue"): [
+        "p*",
+    ],
+
     EggCollide("polygon", "descend", name='', preserve_uv_data=False): [
         "pCube1",
     ],
