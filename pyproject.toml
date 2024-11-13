@@ -46,3 +46,8 @@ ignore = [
 "eggtools/AttributeDefs.py" = [
     "F401",
 ]
+
+# Ignore module levels not on top of the file
+"eggtools/components/EggEnums.py" = [
+    "E402",
+]
