@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from panda3d.egg import EggGroupNode, EggPolygon, EggNode
+from panda3d.egg import EggGroupNode, EggPolygon, EggNode, EggTexture
 
 from eggtools.EggManConfig import NodeNameConfig
 
@@ -22,7 +22,7 @@ class EggAttribute(ABC):
         self.name = name
         self.contents = contents
         self.ident_name = f"{self.entry_type}_{self.name}_{self.contents}"
-        self.target_nodes = NodeNameConfig(list())
+        self.target_nodes = NodeNameConfig(set())
         self.base_node_config = base_node_config
         self._applied = False
 
@@ -31,7 +31,7 @@ class EggAttribute(ABC):
             node_entries = [node_entries]
         if self.base_node_config:
             node_entries += self.base_node_config.NODE_INCLUDES
-        self.target_nodes = NodeNameConfig(node_entries)
+        self.target_nodes = NodeNameConfig(set(node_entries))
 
     def apply(self, egg_base, egg_ctx, node_entries=None):
         # For now we will skip checking to see if we have already applied an EggAttribute with a given node
@@ -66,10 +66,10 @@ class EggAttribute(ABC):
         traverse_egg(egg_base, egg_ctx)
 
     @abstractmethod
-    def _modify_polygon(self, egg_polygon, tref):
+    def _modify_polygon(self, egg_polygon: EggPolygon, tref: EggTexture):
         # This method is to be overridden by a subclass.
         pass
 
     @abstractmethod
-    def _modify_node(self, egg_node):
+    def _modify_node(self, egg_node: EggNode):
         pass
