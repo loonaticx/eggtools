@@ -1,7 +1,7 @@
 from panda3d.core import DSearchPath, Filename
 from panda3d.egg import EggData
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from eggtools.components import EggContext

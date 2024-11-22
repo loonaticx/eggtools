@@ -33,7 +33,10 @@ def test_egg_attrs():
         EggExtFileAttribute("tests/test_spot.egg"),
         EggModelAttribute(),
         EggSequenceAttribute(),
-        EggTagAttribute("key", "val")
+        EggTagAttribute("key", "val"),
+
+        # Uncomment to test errors
+        # EggDartAttribute("notarealattribute"),
     ]):
         print(item)
 

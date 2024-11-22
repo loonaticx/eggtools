@@ -1,15 +1,21 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggGroup
+
+from eggtools.components.EggEnums import DartType
+from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "none": EggGroup.DT_none,
-    "structured": EggGroup.DT_structured,
-    "sync": EggGroup.DT_sync,
-    "no_sync": EggGroup.DT_nosync,
-    "no-sync": EggGroup.DT_nosync,
-    "nosync": EggGroup.DT_nosync,
-    "default": EggGroup.DT_default,
+    "none": DartType.NoType,
+    "structured": DartType.Structured,
+    "sync": DartType.Sync,
+    "no_sync": DartType.NoSync,
+    "no-sync": DartType.NoSync,
+    "nosync": DartType.NoSync,
+    "default": DartType.Default,
 }
+
+
+def get_dart_type(dart_name: str):
+    return name2id.get(dart_name.lower(), None)
 
 
 class EggDartAttribute(EggAttribute):
@@ -23,8 +29,10 @@ class EggDartAttribute(EggAttribute):
                 # False/0
                 dart_type = "none"
         self.dart_type = dart_type
-        super().__init__(entry_type="Dart", name="", contents=self.dart_type)
-        self.dart_mode = name2id[dart_type.lower()]
+        self.dart_mode = get_dart_type(self.dart_type)
+        if self.dart_mode is None:
+            raise EggAttributeInvalid(self, self.dart_type)
+        super().__init__(entry_type = "Dart", name = "", contents = self.dart_type)
 
     @staticmethod
     def get_dart_types():

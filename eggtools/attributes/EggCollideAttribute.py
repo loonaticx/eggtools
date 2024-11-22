@@ -1,89 +1,53 @@
 from panda3d.egg import EggGroup, EggVertexPool, EggPolygon
 
 from eggtools.attributes.EggAttribute import EggAttribute
+from eggtools.components.EggEnums import CollisionFlagType, CollisionSolidType
+from eggtools.components.EggExceptions import EggAttributeInvalid
 
-# Collision Solids
+# Collision Solids, see EggEnums for usage information
 cs2type = {
-    'none': EggGroup.CST_none,
-
-    # The geometry represents an infinite plane.
-    # The first polygon found in the group will define the plane.
-    'plane': EggGroup.CST_plane,
-
-    # The geometry represents a single polygon.
-    # The first polygon is used.
-    'polygon': EggGroup.CST_polygon,
-
-    # The geometry represents a complex shape made up of several polygons.
-    # This collision type should not be overused, as it provides the least optimization benefit.
-    'polyset': EggGroup.CST_polyset,
-
-    # The geometry represents a sphere.
-    # The vertices in the group are averaged together to determine the sphere’s center and radius.
-    'sphere': EggGroup.CST_sphere,
-
-    # The geometry represents a tube.
-    # This is a cylinder-like shape with hemispherical endcaps;
-    # it is sometimes called a capsule or a lozenge in other packages.
-    # The smallest tube shape that will fit around the vertices is used.
-    'tube': EggGroup.CST_tube,
-
-    # The geometry represents an inverse sphere.
-    # This is the same as Sphere, with the normal inverted, so that the solid part of an inverse sphere is the
-    # entire world outside of it.
-    # Note that an inverse sphere is in infinitely large solid with a finite hole cut into it.
-    'inv_sphere': EggGroup.CST_inv_sphere,
-    'invsphere': EggGroup.CST_inv_sphere,
-
-    # The geometry represents a box.
-    # The smallest axis-alligned box that will fit around the vertices is used.
-    'box': EggGroup.CST_box,
-
-    'floor_mesh': EggGroup.CST_floor_mesh,
+    'none': CollisionSolidType.NoType,
+    'plane': CollisionSolidType.Plane,
+    'polygon': CollisionSolidType.Polygon,
+    'polyset': CollisionSolidType.Polyset,
+    'sphere': CollisionSolidType.Sphere,
+    'tube': CollisionSolidType.Tube,
+    'inv_sphere': CollisionSolidType.InvSphere,
+    'invsphere': CollisionSolidType.InvSphere,
+    'box': CollisionSolidType.Box,
+    'floor_mesh': CollisionSolidType.FloorMesh,
 }
 
-# Collision Flags
+
+def get_collision_solid(cs_name: str):
+    return cs2type.get(cs_name.lower(), None)
+
+
+# Collision Flags, see EggEnums for usage information
 
 flags2type = {
-    'none': EggGroup.CF_none,
-
-    # Each group descended from this node that contains geometry will define a new collision object of the given type.
-    # The event name, if any, will also be inherited from the top node and shared among all the collision objects.
-    # This option will soon be the default; it is suggested that it is always specified for most compatibility.
-    'descend': EggGroup.CF_descend,
-
-    # Throws the name of the <Collide> entry, or the name of the surface if the <Collide> entry has no name,
-    # as an event whenever an avatar strikes the solid.
-    # This is the default if the <Collide> entry has a name.
-    'event': EggGroup.CF_event,
-
-    # Don’t discard the visible geometry after using it to define a collision surface;
-    # create both an invisible collision surface and the visible geometry.
-    'keep': EggGroup.CF_keep,
-
-    'solid': EggGroup.CF_solid,
-
-    'center': EggGroup.CF_center,
-
-    'turnstile': EggGroup.CF_turnstile,
-
-    # Stores a special effective normal with the collision solid that points up,
-    # regardless of the actual shape or orientation of the solid.
-    # This can be used to allow an avatar to stand on a sloping surface without having a tendency to slide downward.
-    'level': EggGroup.CF_level,
-
-    # Rather than being a solid collision surface, the defined surface represents a boundary.
-    # The name of the surface will be thrown as an event when an avatar crosses into the interior,
-    # and name-out will be thrown when an avatar exits.
-    'intangible': EggGroup.CF_intangible,
-
+    'none': CollisionFlagType.NoType,
+    'descend': CollisionFlagType.Descend,
+    'event': CollisionFlagType.Event,
+    'keep': CollisionFlagType.Keep,
+    'solid': CollisionFlagType.Solid,
+    'center': CollisionFlagType.Center,
+    'turnstile': CollisionFlagType.Turnstile,
+    'level': CollisionFlagType.Level,
+    'intangible': CollisionFlagType.Intangible,
 }
+
+
+def get_collision_flag(cf_name: str):
+    return flags2type.get(cf_name.lower(), None)
 
 
 class EggCollideAttribute(EggAttribute):
     def __init__(self, csname, flags, name='', preserve_uv_data=True):
         # <Collide> name { type [flags] }
-        self.cstype = cs2type[csname.lower()]
+        self.cstype = get_collision_solid(csname)
+        if self.cstype is None:
+            raise EggAttributeInvalid(self, csname)
         self.flags = list()
 
         # Make sure flags is not empty & it's a proper list.
@@ -95,11 +59,15 @@ class EggCollideAttribute(EggAttribute):
             flags.append('descend')
 
         for flag_entry in flags:
-            self.flags.append(flags2type[flag_entry.lower()])
+            flag_value = get_collision_flag(flag_entry)
+            if flag_value is None:
+                raise EggAttributeInvalid(self, flag_entry)
+            self.flags.append(flag_value)
 
         self.preserve_uv_data = preserve_uv_data
 
-        super().__init__(entry_type="Collide", name=name, contents=csname + (' ' if flags else '') + ' '.join(flags))
+        super().__init__(entry_type = "Collide", name = name,
+                         contents = csname + (' ' if flags else '') + ' '.join(flags))
 
     @staticmethod
     def get_collision_solids():
@@ -145,4 +113,4 @@ class EggCollideAttribute(EggAttribute):
 
 class EggCollide(EggCollideAttribute):
     def __init__(self, csname, flags, name='', preserve_uv_data=True):
-        super().__init__(csname, flags, name, preserve_uv_data=preserve_uv_data)
+        super().__init__(csname, flags, name, preserve_uv_data = preserve_uv_data)

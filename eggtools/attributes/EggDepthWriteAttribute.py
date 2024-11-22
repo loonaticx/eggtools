@@ -1,11 +1,18 @@
 from eggtools.attributes.EggAttribute import EggAttribute
 from panda3d.egg import EggRenderMode
 
+from eggtools.components.EggEnums import DepthWriteMode
+from eggtools.components.EggExceptions import EggAttributeInvalid
+
 name2id = {
-    "unspecified": EggRenderMode.DWM_unspecified,  # 0
-    "off": EggRenderMode.DWM_off,  # 1
-    "on": EggRenderMode.DWM_on,  # 2
+    "unspecified": DepthWriteMode.Unspecified,  # 0
+    "off": DepthWriteMode.Off,  # 1
+    "on": DepthWriteMode.On,  # 2
 }
+
+
+def get_depth_write_mode(depth_write_name: str):
+    return name2id.get(depth_write_name.lower(), None)
 
 
 class EggDepthWriteAttribute(EggAttribute):
@@ -16,8 +23,10 @@ class EggDepthWriteAttribute(EggAttribute):
                 depth_type = "on"
             else:
                 depth_type = "off"
-        super().__init__(entry_type="Scalar", name="depth-write", contents=depth_type)
-        self.depth_type = name2id[depth_type.lower()]
+        self.depth_type = get_depth_write_mode(depth_type)
+        if self.depth_type is None:
+            raise EggAttributeInvalid(self, depth_type)
+        super().__init__(entry_type = "Scalar", name = "depth-write", contents = depth_type)
 
     @staticmethod
     def get_depth_write_modes():
@@ -36,11 +45,11 @@ class EggDepthWriteAttribute(EggAttribute):
                     egg_polygon.setDepthWriteMode(self.depth_type)
 
     def _modify_node(self, egg_node):
-        if self.target_nodes.check(egg_node.getName()) and\
-                hasattr(egg_node, "determineDepthWriteMode") and\
+        if self.target_nodes.check(egg_node.getName()) and \
+                hasattr(egg_node, "determineDepthWriteMode") and \
                 hasattr(egg_node, "setDepthWriteMode"):
             # First, check if we HAVE a render mode in the first place:
-            render_mode = egg_node.determineDepthWriteMode()  # type: EggRenderMode
+            render_mode: EggRenderMode = egg_node.determineDepthWriteMode()
 
             # If we do not have a render node, then we do not have a depth-write value.
             if not render_mode:

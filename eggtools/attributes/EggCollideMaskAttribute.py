@@ -1,4 +1,5 @@
 from eggtools.attributes.EggAttribute import EggAttribute
+from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2type = {
     'both': ['collide-mask', [True, True]],
@@ -9,13 +10,19 @@ name2type = {
 }
 
 
+def get_collide_mask(collide_mask_name: str):
+    return name2type.get(collide_mask_name.lower(), [None, None])
+
+
 class EggCollideMaskAttribute(EggAttribute):
     def __init__(self, value, side='both'):
         # side = from, into, both
         self.value = value
         self.side = side
-        name = name2type[side][0]
-        super().__init__(entry_type="Scalar", name=name, contents=self.value)
+        name = get_collide_mask(side)[0]
+        if name is None:
+            raise EggAttributeInvalid(self, side)
+        super().__init__(entry_type = "Scalar", name = name, contents = self.value)
 
     @staticmethod
     def get_collide_masks():

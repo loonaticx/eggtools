@@ -1,17 +1,22 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggGroup
+
+from eggtools.components.EggEnums import DynamicCoordinateType
+from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "unspecified": EggGroup.DC_unspecified,  # 0
-    "none": EggGroup.DC_none,  # 16
-    "local": EggGroup.DC_local,  # 32
-    "net": EggGroup.DC_net,  # 48
-    "no_touch": EggGroup.DC_no_touch,  # 64
-    "no-touch": EggGroup.DC_no_touch,  # 64
-    "notouch": EggGroup.DC_no_touch,  # 64
-    "default": EggGroup.DC_default,  # 80
-
+    "unspecified": DynamicCoordinateType.Unspecified,
+    "none": DynamicCoordinateType.NoType,
+    "local": DynamicCoordinateType.Local,
+    "net": DynamicCoordinateType.Net,
+    "no_touch": DynamicCoordinateType.NoTouch,
+    "no-touch": DynamicCoordinateType.NoTouch,
+    "notouch": DynamicCoordinateType.NoTouch,
+    "default": DynamicCoordinateType.Default,
 }
+
+
+def get_dcs_type(dcs_name: str):
+    return name2id.get(dcs_name.lower(), None)
 
 
 class EggDCSAttribute(EggAttribute):
@@ -28,8 +33,10 @@ class EggDCSAttribute(EggAttribute):
                 # False/0
                 dcs_type = "none"
         self.dcs_type = dcs_type
-        super().__init__(entry_type="DCS", name="", contents=self.dcs_type)
-        self.dcs_mode = name2id[dcs_type.lower()]
+        self.dcs_mode = get_dcs_type(self.dcs_type)
+        if self.dcs_mode is None:
+            raise EggAttributeInvalid(self, self.dcs_type)
+        super().__init__(entry_type = "DCS", name = "", contents = self.dcs_type)
 
     @staticmethod
     def get_dcs_types():

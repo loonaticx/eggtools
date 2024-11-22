@@ -1,11 +1,18 @@
 from eggtools.attributes.EggAttribute import EggAttribute
 from panda3d.egg import EggRenderMode
 
+from eggtools.components.EggEnums import DepthTestMode
+from eggtools.components.EggExceptions import EggAttributeInvalid
+
 name2id = {
-    "unspecified": EggRenderMode.DTM_unspecified,  # 0
-    "off": EggRenderMode.DTM_off,  # 1
-    "on": EggRenderMode.DTM_on,  # 2
+    "unspecified": DepthTestMode.Unspecified,  # 0
+    "off": DepthTestMode.Off,  # 1
+    "on": DepthTestMode.On,  # 2
 }
+
+
+def get_depth_test_mode(depth_test_name: str):
+    return name2id.get(depth_test_name.lower(), None)
 
 
 class EggDepthTestAttribute(EggAttribute):
@@ -16,8 +23,10 @@ class EggDepthTestAttribute(EggAttribute):
                 depth_type = "on"
             else:
                 depth_type = "off"
-        super().__init__(entry_type="Scalar", name="depth-test", contents=depth_type)
-        self.depth_type = name2id[depth_type.lower()]
+        self.depth_type = get_depth_test_mode(depth_type)
+        if self.depth_type is None:
+            raise EggAttributeInvalid(self, depth_type)
+        super().__init__(entry_type = "Scalar", name = "depth-test", contents = depth_type)
 
     def _modify_polygon(self, egg_polygon, tref=None):
         target_nodes = self.target_nodes
@@ -33,7 +42,7 @@ class EggDepthTestAttribute(EggAttribute):
     def _modify_node(self, egg_node):
         if self.target_nodes.check(egg_node.getName()) and hasattr(egg_node, "getDepthTestMode"):
             # First, check if we HAVE a render mode in the first place:
-            render_mode = egg_node.getDepthTestMode()  # type: EggRenderMode
+            render_mode: EggRenderMode = egg_node.getDepthTestMode()
 
             # If we do not have a render node, then we do not have a depth-test value.
             if not render_mode:

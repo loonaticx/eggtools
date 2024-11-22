@@ -1,4 +1,3 @@
-from eggtools.attributes.EggAttribute import EggAttribute
 from eggtools.attributes.EggFPSAttribute import EggFPSAttribute
 from eggtools.attributes.EggSwitchAttribute import EggSwitchAttribute
 

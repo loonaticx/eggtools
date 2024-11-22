@@ -2,7 +2,7 @@ from eggtools.attributes.EggAttribute import EggAttribute
 
 
 class EggFPSAttribute(EggAttribute):
-    def __init__(self, fps_rate: float = 24):
+    def __init__(self, fps_rate: float = 24.):
         """
         :param int fps_rate: amount of frames per second
         """
@@ -21,5 +21,5 @@ class EggFPSAttribute(EggAttribute):
 
 
 class EggFPS(EggFPSAttribute):
-    def __init__(self, fps_rate: float = 24):
+    def __init__(self, fps_rate: float = 24.):
         super().__init__(fps_rate)

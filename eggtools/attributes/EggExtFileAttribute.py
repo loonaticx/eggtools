@@ -1,5 +1,5 @@
 from panda3d.core import Filename
-from panda3d.egg import EggFilenameNode, EggExternalReference
+from panda3d.egg import EggExternalReference
 from typing import List
 
 from eggtools.attributes.EggAttribute import EggAttribute

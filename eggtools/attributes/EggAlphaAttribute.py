@@ -1,29 +1,30 @@
 from eggtools.attributes.EggAttribute import EggAttribute
-from panda3d.egg import EggRenderMode, EggVertexPool
+from panda3d.egg import EggVertexPool
 
 from eggtools.EggManConfig import DualConfig
+from eggtools.components.EggEnums import RenderAlphaMode
+from eggtools.components.EggExceptions import EggAttributeInvalid
 
 name2id = {
-    "unspecified": EggRenderMode.AM_unspecified,
-    "off": EggRenderMode.AM_off,
-    "on": EggRenderMode.AM_on,
-
-    # Normal alpha blending
-    "blend": EggRenderMode.AM_blend,
-
-    # Alpha blending w/o depth write
-    "blend_no_occlude": EggRenderMode.AM_blend_no_occlude,
-    "blend-no-occlude": EggRenderMode.AM_blend_no_occlude,
-
-    "ms": EggRenderMode.AM_ms,
-    "multisample": EggRenderMode.AM_ms,
-    "multisample_mask": EggRenderMode.AM_ms_mask,
-    "ms_mask": EggRenderMode.AM_ms_mask,
-    "binary": EggRenderMode.AM_binary,
-    "dual": EggRenderMode.AM_dual,
-    "premultiplied": EggRenderMode.AM_premultiplied,
+    "unspecified": RenderAlphaMode.Unspecified,
+    "off": RenderAlphaMode.Off,
+    "on": RenderAlphaMode.On,
+    "blend": RenderAlphaMode.Blend,
+    "blend_no_occlude": RenderAlphaMode.BlendNoOcclude,
+    "blend-no-occlude": RenderAlphaMode.BlendNoOcclude,
+    "ms": RenderAlphaMode.Multisample,
+    "multisample": RenderAlphaMode.Multisample,
+    "multisample_mask": RenderAlphaMode.MultisampleMask,
+    "ms_mask": RenderAlphaMode.MultisampleMask,
+    "binary": RenderAlphaMode.Binary,
+    "dual": RenderAlphaMode.Dual,
+    "premultiplied": RenderAlphaMode.Premultiplied,
 
 }
+
+
+def get_alpha_type(alpha_name: str):
+    return name2id.get(alpha_name.lower(), None)
 
 
 class EggAlphaAttribute(EggAttribute):
@@ -34,8 +35,10 @@ class EggAlphaAttribute(EggAttribute):
         # <Scalar> alpha { dual }
         self.alpha_name = alpha_name
         self.overwrite = overwrite
-        super().__init__(entry_type="Scalar", name="alpha", contents=self.alpha_name)
-        self.alpha_mode = name2id[alpha_name.lower()]
+        self.alpha_mode = get_alpha_type(self.alpha_name)
+        if self.alpha_mode is None:
+            raise EggAttributeInvalid(self, self.alpha_name)
+        super().__init__(entry_type = "Scalar", name = "alpha", contents = self.alpha_name)
 
     @staticmethod
     def get_attributes():
