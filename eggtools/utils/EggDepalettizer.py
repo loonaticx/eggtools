@@ -8,6 +8,7 @@ from panda3d.egg import EggPolygon, EggNode
 from eggtools.EggMan import EggMan
 from eggtools.components.EggDataContext import EggDataContext
 from eggtools.components.EggEnums import TextureWrapMode
+from eggtools.components.images.ImageFill import FillTypes, FillType, FillMode
 from eggtools.components.images.ImageMarginer import ImageMarginer
 from eggtools.components.points.PointData import PointData, PointHelper
 
@@ -18,7 +19,8 @@ from eggtools.utils.MarginCalculator import MarginCalculator
 # how to debug:
 # compare the size of the unused space (margins) with the texture and the uvs
 class Depalettizer:
-    def __init__(self, file_list: list, padding_u: float = 0.001, padding_v: float = 0.001, eggman: EggMan = None):
+    def __init__(self, file_list: list, padding_u: float = 0.001, padding_v: float = 0.001,
+                 default_fill_type: ImageFill.FillType = ImageFill.UnknownFill, eggman: EggMan = None):
         """
         By default, padding is equivalent to 1% of the texture size [0-1]
         (meaning that the uv would effectively be 99% of its normalized scale)
@@ -29,6 +31,7 @@ class Depalettizer:
         # Padding must be a non-zero value.
         self.padding_u = max(padding_u, 0.00000000001)
         self.padding_v = max(padding_v, 0.00000000001)
+        self.default_fill_type = default_fill_type
 
         # Problem: You cannot just add new textures to a texture collection or to polygons. You think it would be easy?
         # No, we need to effectively 'inject' these new texture headers into our working EggData.
@@ -67,6 +70,9 @@ class Depalettizer:
         """
         :param PointData point_data: Includes the texture and uvs needed to generate a bbox
         """
+        if not fill_type:
+            fill_type = self.default_fill_type
+
         # If we can't create a cropped image let's bounce before something explodes for now
         bbox_coords = point_data.get_bbox()
         source_texture = point_data.egg_texture
@@ -100,7 +106,6 @@ class Depalettizer:
                 Filename.toOsSpecific(dest_file),
                 **image_kwargs
             )
-
         return expanded_image
 
     def depalettize_node(self,
@@ -117,7 +122,6 @@ class Depalettizer:
             image_kwargs = dict()
 
         ctx = self.eggman.egg_datas[egg_data]
-
         i = 0
 
         # Nodes will most likely contain numerous of textures. We can group related polygons by mutual textures.
@@ -131,6 +135,10 @@ class Depalettizer:
 
             # THIS is all of our aggregated point data. Don't mind the similar variable names here.
             point_data = PointHelper.unify_point_datas(point_datas)
+
+            # sometimes we get a food truck with no food
+            if not point_data:
+                continue
 
             # Generates and writes out the new texture images.
             file_ext = point_texture.getFilename().getExtension().lower()
