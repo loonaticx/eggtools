@@ -1,10 +1,7 @@
 """
-UV Wrap mode for an EggNode that has a texture.
+UV Wrap mode for a EggTexture
 
-Note: If an EggNode is being modified by this attribute, keep in mind that
-all of its textures will be modified. Any nodes that use the same texture will also get the modification
-
-This is because the UV wrap mode is assigned in the Texture header.
+The UV wrap mode is assigned in the Texture header.
 """
 
 from panda3d.egg import EggTexture
@@ -52,19 +49,20 @@ class EggUVWrapAttribute(EggAttribute):
         pass
 
     def _modify_node(self, egg_node):
-        if isinstance(egg_node, EggTexture):
-            egg_texture = egg_node
-            wrap_u: EggTexture.WrapMode = egg_texture.getWrapU()
-            wrap_v: EggTexture.WrapMode = egg_texture.getWrapV()
-            wrap_w: EggTexture.WrapMode = egg_texture.getWrapW()
-            if self.wrap_u is not None:
-                egg_texture.setWrapU(self.wrap_u)
-            if self.wrap_v is not None:
-                egg_texture.setWrapV(self.wrap_v)
-            if self.wrap_w is not None:
-                egg_texture.setWrapW(self.wrap_w)
-            if self.border_color:
-                egg_texture.setBorderColor(self.border_color)
+        if self.target_nodes.check(egg_node.getName()):
+            if isinstance(egg_node, EggTexture):
+                egg_texture = egg_node
+                wrap_u: EggTexture.WrapMode = egg_texture.getWrapU()
+                wrap_v: EggTexture.WrapMode = egg_texture.getWrapV()
+                wrap_w: EggTexture.WrapMode = egg_texture.getWrapW()
+                if self.wrap_u is not None:
+                    egg_texture.setWrapU(self.wrap_u)
+                if self.wrap_v is not None:
+                    egg_texture.setWrapV(self.wrap_v)
+                if self.wrap_w is not None:
+                    egg_texture.setWrapW(self.wrap_w)
+                if self.border_color:
+                    egg_texture.setBorderColor(self.border_color)
 
 
 class EggUVWrap(EggUVWrapAttribute):
