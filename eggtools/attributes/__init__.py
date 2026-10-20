@@ -19,3 +19,4 @@ from eggtools.attributes.EggFlattenTransformAttribute import EggFlattenTransform
 from eggtools.attributes.EggPortalAttribute import EggPortal, EggPortalAttribute
 from eggtools.attributes.EggPolylightAttribute import EggPolylight, EggPolylightAttribute
 from eggtools.attributes.EggBlendModeAttribute import EggBlendMode, EggBlendModeAttribute
+from eggtools.attributes.EggUVWrapAttribute import EggUVWrap, EggUVWrapAttribute
