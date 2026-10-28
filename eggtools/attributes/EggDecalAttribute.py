@@ -13,6 +13,9 @@ class EggDecalAttribute(EggAttribute):
 
     def _modify_node(self, egg_node):
         if DecalConfig.check(egg_node.get_name()) or self.target_nodes.check(egg_node.get_name()):
+            # 'panda3d.egg.EggTexture' object has no attribute 'setDecalFlag'
+            if not hasattr(egg_node, "setDecalFlag"):
+                return
             if egg_node.determineDecal():
                 pass
                 # logging.debug(f"{egg_node.get_name()} already has decal mode set")
