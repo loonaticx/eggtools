@@ -208,4 +208,45 @@ class RenderVisibilityMode(EggRenderEnum):
     Hidden = ERM.VMHidden
     Normal = ERM.VMNormal
 
+
+# Bin Order
+
+from panda3d.core import CullBinEnums as CBE
+
+
+class CullBinType(EggRenderEnum):
+    Invalid = CBE.BTInvalid
+
+    """
+    Objects are drawn in the order in which they appear in the scene graph,
+    in a depth-first traversal from top to bottom and then from left to right.
+    """
+    Unsorted = CBE.BTUnsorted
+
+    """
+    Collects together objects that share similar state and renders them together,
+    in an attempt to minimize state transitions in the scene.
+    """
+    StateSorted = CBE.BTStateSorted
+
+    """
+    Sorts each Geom according to the center of its bounding volume, in linear distance from the camera plane,
+    so that farther objects are drawn first.
+    That is, in Panda’s default right-handed Z-up coordinate system, objects with large positive Y are drawn
+    before objects with smaller positive Y.
+    """
+    BackToFront = CBE.BTBackToFront
+
+    """
+    The reverse of back_to_front, this sorts so that nearer objects are drawn first.
+    """
+    FrontToBack = CBE.BTFrontToBack
+
+    """
+    Render all of the objects in the bin in a fixed order specified by the user.
+    This is according to the second parameter of the NodePath.set_bin() method;
+    objects with a lower value are drawn first.
+    """
+    Fixed = CBE.BTFixed
+
 # endregion
